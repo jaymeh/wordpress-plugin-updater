@@ -16,14 +16,14 @@ async function run() {
     if (!updateReportFound) {
       core.debug('update-report.md not found in .gitignore, adding it now.');
       await addToIgnore('update-report.md', '# Ignore Updates Versions file.');
-    };
+    }
 
     // Checks for update-report.md in .gitignore.
     const wpCliIgnoreFound = await findInFile('.gitignore', 'wp-cli.phar');
     if (!wpCliIgnoreFound) {
       core.debug('wp-cli.phar not found in .gitignore, adding it now.');
       await addToIgnore('wp-cli.phar', '# Prevent wp-cli.phar script from being added to repository.');
-    };
+    }
 
     // Commits.
   } catch (error) {
