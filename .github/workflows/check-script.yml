@@ -59,6 +59,4 @@ jobs:
 
       - name: Run the action.
         uses: ./
-        run:
-          ls -lah
         # with:

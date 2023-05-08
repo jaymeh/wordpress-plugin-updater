@@ -8,6 +8,9 @@ const { updateExtensions } = require('./updates');
 // most @actions toolkit packages have async methods
 async function run() {
   try {
+    await exec.exec('ls', '-la');
+    await exec.exec('pwd');
+
     // Create update file.
     const file = 'update-report.md';
     exec.exec('touch', file);
