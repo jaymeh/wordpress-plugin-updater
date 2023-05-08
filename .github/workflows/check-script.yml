@@ -1,0 +1,53 @@
+name: Maintenance Updates
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ACF_PRO_KEY: ${{ secrets.ACF_PRO_KEY }}
+
+      DB_DATABASE: wordpress
+      DB_USER: root
+      DB_PASSWORD: root
+
+      WP_SITE_URL: wordpress-github-actions-testing.ddev.site
+      WP_SITE_TITLE: "Devops Site"
+      WP_ADMIN_USERNAME: admin
+      WP_ADMIN_EMAIL: admin@example.com
+
+      PLUGIN_DIRECTORY: wp-content/plugins
+      THEME_DIRECTORY: wp-content/themes
+      LANGUAGE_DIRECTORY: wp-content/languages
+
+      # Detemines whether ACF pro should be updated.
+      UPDATE_ACF_PRO: false
+      UPDATE_LANGUAGES: true
+    working_directory: ./test/wordpress
+    steps:
+      - name: Set up MySQL
+        run: |
+          sudo systemctl start mysql
+          sudo mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.0
+        env:
+          update: true
+
+      - uses: actions/checkout@v3
+
+      - name: Install WP CLI
+        run: curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+
+      - name: Install WordPress
+        run:
+          wp-cli.phar core download --force
+
+      - name: Run the action.
+        uses: ./
+        inputs:
+          ignoreGitChanges: true
