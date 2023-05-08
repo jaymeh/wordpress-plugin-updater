@@ -47,8 +47,11 @@ jobs:
         run: curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 
       - name: Install WordPress
-        run:
+        run: |
           php wp-cli.phar core download --force
+          ls -lah
+          pwd
+
 
       - name: Cleanup
         run:
