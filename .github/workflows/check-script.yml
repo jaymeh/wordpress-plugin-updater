@@ -52,5 +52,4 @@ jobs:
 
       - name: Run the action.
         uses: ./
-        inputs:
-          ignoreGitChanges: true
+        # with:
