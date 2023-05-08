@@ -52,4 +52,5 @@ jobs:
 
       - name: Run the action.
         uses: ./
+        # working-directory: test/wordpress
         # with:
