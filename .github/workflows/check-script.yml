@@ -50,6 +50,10 @@ jobs:
         run:
           php wp-cli.phar core download --force
 
+      - name: Cleanup
+        run:
+          rm wp-cli.phar
+
       - name: Run the action.
         uses: ./
         # working-directory: test/wordpress
