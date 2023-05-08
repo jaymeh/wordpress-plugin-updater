@@ -24,7 +24,10 @@ jobs:
       # Detemines whether ACF pro should be updated.
       UPDATE_ACF_PRO: false
       UPDATE_LANGUAGES: true
-    working_directory: ./test/wordpress
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./test/wordpress
     steps:
       - name: Set up MySQL
         run: |
