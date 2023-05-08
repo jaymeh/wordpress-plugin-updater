@@ -48,7 +48,7 @@ jobs:
 
       - name: Install WordPress
         run:
-          wp-cli.phar core download --force
+          php wp-cli.phar core download --force
 
       - name: Run the action.
         uses: ./
