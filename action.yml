@@ -1,7 +1,26 @@
 name: 'WordPress Maintenence Upgrade'
 description: 'Github action with tools to help with WordPress upgrades.'
 inputs:
-  
+  ignoreGitChanges:
+    description: 'Ignore git changes'
+    required: false
+    default: false
+  pluginDirectory:
+    description: 'Relative path to plugins'
+    required: false
+    default: 'wp-content/plugins'
+  databaseName:
+    description: 'Database name'
+    required: false
+    default: 'wordpress'
+  databaseUsername:
+    description: 'Database username'
+    required: false
+    default: 'wordpress'
+  databasePassword:
+    description: 'Database password'
+    required: false
+    default: 'wordpress'
 outputs:
   time: # output will be available to future steps
     description: 'The current time after waiting'
