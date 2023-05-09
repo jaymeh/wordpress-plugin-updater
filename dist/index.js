@@ -3975,12 +3975,13 @@ const os = __nccwpck_require__(37);
 
 // Update Items $1 = TOTAL_ROWS, $2 = COMMAND, $3 = TYPE (plugin, theme, language, core), $4 = DIRECTORY.
 let updateExtensions = async function (totalRows, command, type, directory) {
-    core.debug(`Updating ${type}s.`);
+    core.debug(`Found ${totalRows} ${type}(s).`);
+    const commandOutput = JSON.parse(command);
     for (let i = 0; i <= totalRows - 1; i++) {
-        const version = JSON.parse(command)[i].old_version;
-        const updatedVersion = JSON.parse(command)[i].new_version;
-        const name = JSON.parse(command)[i].name;
-        const status = JSON.parse(command)[i].status;
+        const version = commandOutput[i].old_version;
+        const updatedVersion = commandOutput[i].new_version;
+        const name = commandOutput[i].name;
+        const status = commandOutput[i].status;
         const pluginPath = `${directory}/${name}`;
 
         core.debug(`Plugin Path is: ${pluginPath}/*`);
@@ -4247,6 +4248,12 @@ async function run() {
     }
 
     await updateExtensions(totalRows, updateCommand, type, pluginDirectory, withoutGit);
+
+    await fs.readFile('update-report.md', 'utf8').then((data) => {
+      core.info(data);
+    });
+
+    core.debug('Plugin updates complete.');
 
     // Commits.
   } catch (error) {

@@ -86,6 +86,12 @@ async function run() {
 
     await updateExtensions(totalRows, updateCommand, type, pluginDirectory, withoutGit);
 
+    await fs.readFile('update-report.md', 'utf8').then((data) => {
+      core.info(data);
+    });
+
+    core.debug('Plugin updates complete.');
+
     // Commits.
   } catch (error) {
     core.setFailed(error.message);
