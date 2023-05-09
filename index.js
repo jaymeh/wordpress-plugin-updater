@@ -9,8 +9,11 @@ const { updateExtensions } = require('./updates');
 async function run() {
   try {
     const wordPressPath = core.getInput('wordPressPath', {});
+    core.debug(`Wordpress Path: ${wordPressPath}`);
     if (wordPressPath != false) {
-      await exec.exec('cd', wordPressPath);
+      core.debug(`Moving to: ${wordPressPath}`);
+      let cdCommand = await exec.exec('cd', wordPressPath);
+      core.debug(cdCommand);
     }
 
     await exec.exec('ls', '-la');

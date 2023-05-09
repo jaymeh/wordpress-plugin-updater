@@ -4156,6 +4156,14 @@ const { updateExtensions } = __nccwpck_require__(853);
 // most @actions toolkit packages have async methods
 async function run() {
   try {
+    const wordPressPath = core.getInput('wordPressPath', {});
+    core.debug(`Wordpress Path: ${wordPressPath}`);
+    if (wordPressPath != false) {
+      core.debug(`Moving to: ${wordPressPath}`);
+      let cdCommand = await exec.exec('cd', wordPressPath);
+      core.debug(cdCommand);
+    }
+
     await exec.exec('ls', '-la');
     await exec.exec('pwd');
 
