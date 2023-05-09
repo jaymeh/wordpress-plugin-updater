@@ -58,6 +58,7 @@ jobs:
           rm wp-cli.phar
 
       - name: Run the action.
-        uses: ./
-        with:
-          wordPressPath: test/wordpress
+        uses: jaymeh/wordpress-plugin-updater@main
+        # working-directory: test/wordpress
+        # with:
+        #   wordPressPath: test/wordpress
