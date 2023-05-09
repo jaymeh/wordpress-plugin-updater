@@ -4238,6 +4238,7 @@ async function run() {
 
     // Update Plugins.
     const updateCommand = await exec.exec(`php wp-cli.phar plugin update --path=${wordPressPath} --all --format=json`).then((output) => {
+      core.debug(output.stdout);
       return output.stdout;
     }).catch((error) => { core.setFailed(error.message); })
     const type = 'plugin';
