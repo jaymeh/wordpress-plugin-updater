@@ -4237,8 +4237,14 @@ async function run() {
     await exec.exec('php', ['wp-cli.phar', 'core', 'install', `--path=${wordPressPath}`, '--url="site.local"', '--title="CI Test Site"', '--admin_user=admin', '--admin_email=admin@example.com']);
 
     // Update Plugins.
-    const updateCommand = await exec.exec(`php wp-cli.phar plugin update --path=${wordPressPath} --all --format=json`);
+    const updateCommand = await exec.exec(`php wp-cli.phar plugin update --path=${wordPressPath} --all --format=json`).then((output) => {
+      return output.stdout;
+    }).catch((error) => { core.setFailed(error.message); })
     const type = 'plugin';
+
+    const commandOutput = JSON.parse(updateCommand);
+    core.debug(commandOutput);
+
     const totalRows = JSON.parse(updateCommand).length;
 
     if (totalRows > 0) {
