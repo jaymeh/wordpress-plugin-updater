@@ -1,5 +1,6 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
+const io = require('@actions/io');
 
 const { findInFile } = require('./filesystem');
 const { addToIgnore } = require('./git');
@@ -12,8 +13,8 @@ async function run() {
     core.debug(`Wordpress Path: ${wordPressPath}`);
     if (wordPressPath != false) {
       core.debug(`Moving to: ${wordPressPath}`);
-      core.debug(await exec.exec('which', 'cd'));
-      let cdCommand = await exec.exec('cd', wordPressPath);
+      const cdPath = await io.which('cd', true);
+      let cdCommand = await exec.exec(cdPath, wordPressPath);
       core.debug(cdCommand);
     }
 

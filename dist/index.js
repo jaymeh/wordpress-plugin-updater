@@ -4148,6 +4148,7 @@ var __webpack_exports__ = {};
 (() => {
 const core = __nccwpck_require__(186);
 const exec = __nccwpck_require__(514);
+const io = __nccwpck_require__(436);
 
 const { findInFile } = __nccwpck_require__(631);
 const { addToIgnore } = __nccwpck_require__(913);
@@ -4160,8 +4161,8 @@ async function run() {
     core.debug(`Wordpress Path: ${wordPressPath}`);
     if (wordPressPath != false) {
       core.debug(`Moving to: ${wordPressPath}`);
-      core.debug(await exec.exec('which', 'cd'));
-      let cdCommand = await exec.exec('cd', wordPressPath);
+      const cdPath = await io.which('cd', true);
+      let cdCommand = await exec.exec(cdPath, wordPressPath);
       core.debug(cdCommand);
     }
 
