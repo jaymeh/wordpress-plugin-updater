@@ -58,7 +58,7 @@ jobs:
           php wp-cli.phar plugin install advanced-custom-fields --version=6.0.7
 
       - name: Cleanup
-        run:
+        run: |
           rm wp-cli.phar
           rm wp-config.php
           sudo mysql -e 'DROP DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
