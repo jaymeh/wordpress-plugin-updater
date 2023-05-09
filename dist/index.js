@@ -6,7 +6,7 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 
 const fs = (__nccwpck_require__(147).promises);
 
-let findInFile = async function (file, string) {
+const findInFile = async function (file, string) {
     const fileContains = await fs.readFile(file)
         .then(function (data) {
             if (data.includes(string)) {
@@ -31,13 +31,13 @@ module.exports = { findInFile };
 const fs = (__nccwpck_require__(147).promises);
 const os = __nccwpck_require__(37);
 
-let addToIgnore = async function (file, comment = null) {
+let addToIgnore = async function (fileToIgnore, comment = null) {
     if (comment) {
         await fs.appendFile('.gitignore', os.EOL);
         await fs.appendFile('.gitignore', comment);
     }
     await fs.appendFile('.gitignore', os.EOL);
-    await fs.appendFile('.gitignore', file);
+    await fs.appendFile('.gitignore', fileToIgnore);
     await fs.appendFile('.gitignore', os.EOL);
 
     return true;
@@ -3970,26 +3970,36 @@ exports["default"] = _default;
 
 const exec = __nccwpck_require__(514);
 const core = __nccwpck_require__(186);
+const fs = (__nccwpck_require__(147).promises);
+const os = __nccwpck_require__(37);
 
 // Update Items $1 = TOTAL_ROWS, $2 = COMMAND, $3 = TYPE (plugin, theme, language, core), $4 = DIRECTORY.
 let updateExtensions = async function (totalRows, command, type, directory) {
     core.debug(`Updating ${type}s.`);
     for (let i = 0; i <= totalRows - 1; i++) {
-        // const version = JSON.parse(command)[i].old_version;
-        // const updatedVersion = JSON.parse(command)[i].new_version;
+        const version = JSON.parse(command)[i].old_version;
+        const updatedVersion = JSON.parse(command)[i].new_version;
         const name = JSON.parse(command)[i].name;
         const status = JSON.parse(command)[i].status;
         const pluginPath = `${directory}/${name}`;
 
-        await exec.exec('echo', [`${pluginPath}/*`]);
+        core.debug(`Plugin Path is: ${pluginPath}/*`);
 
         if (status === 'Updated') {
+            core.info(`Updating plugin: ${name} at ${pluginPath}`);
             await exec.exec('echo', [`"${pluginPath}/*"`]);
-            // await exec.exec('git', ['add', "${pluginPath}/*"]);
-            // execSync(`git add `);
-            // execSync(`git commit -m "Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}."`);
-            // execSync(`echo "- Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}." >> ${file}`);
+
+            await exec.exec('git', ['add', `${pluginPath}/*`]);
+
+            var commitMessage = `Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}.`;
+            await exec.exec('git', ['commit', '-m', commitMessage]);
+            await fs.appendFile('update-report.md', '- ' + commitMessage);
         }
+    }
+
+    if (totalRows > 0) {
+        await fs.appendFile('update-report.md', os.EOL);
+        await fs.appendFile('update-report.md', os.EOL);
     }
 };
 
@@ -4152,6 +4162,8 @@ var __webpack_exports__ = {};
 (() => {
 const core = __nccwpck_require__(186);
 const exec = __nccwpck_require__(514);
+const os = __nccwpck_require__(37);
+const fs = (__nccwpck_require__(147).promises);
 // const io = require('@actions/io');
 
 const { findInFile } = __nccwpck_require__(631);
@@ -4161,32 +4173,30 @@ const { updateExtensions } = __nccwpck_require__(853);
 // most @actions toolkit packages have async methods
 async function run() {
   try {
+    // TODO: Wrap path handling in another function.
     const wordPressPath = core.getInput('wordPressPath', {});
     core.debug(`Wordpress Path: ${wordPressPath}`);
-    // if (wordPressPath != false) {
-    //   core.debug(`Moving to: ${wordPressPath}`);
-    //   const cdPath = await io.which('cd');
-    //   core.debug(cdPath);
-    //   let cdCommand = await exec.exec('cd', wordPressPath);
-    //   core.debug(cdCommand);
-    // }
-
-    await exec.exec('ls', '-la');
-    await exec.exec('pwd');
+    let wordPressPathTrailingSlash = wordPressPath;
+    if (wordPressPath != false) {
+      // Add trailing slash if not present.
+      if (!wordPressPath.endsWith('/')) {
+        core.debug('Wordpress Path does not end with a slash, adding one now.');
+        wordPressPathTrailingSlash = `${wordPressPath}/`;
+      }
+    }
 
     // Create update file.
     const file = 'update-report.md';
     exec.exec('touch', file);
 
-    // WP Path.
-    // const withoutGit = core.getInput('ignoreGitChanges', {});
-    const withoutGit = true;
-
-    const pluginDirectory = core.getInput('pluginDirectory', {});
+    const pluginDirectory = wordPressPathTrailingSlash + core.getInput('pluginDirectory', {});
     const databaseName = core.getInput('databaseName', {});
     const databaseUsername = core.getInput('databaseUsername', {});
     const databasePassword = core.getInput('databasePassword', {});
 
+    // WP Path.
+    // const withoutGit = core.getInput('ignoreGitChanges', {});
+    const withoutGit = true;
     if (withoutGit) {
       core.info('Ignoring git changes.');
     }
@@ -4230,7 +4240,13 @@ async function run() {
     const type = 'plugin';
     const totalRows = JSON.parse(updateCommand).length;
 
-    await updateExtensions(totalRows, updateCommand, type, pluginDirectory);
+    if (totalRows > 0) {
+      await fs.appendFile('update-report.md', '## Plugins');
+      await fs.appendFile('update-report.md', os.EOL);
+      await fs.appendFile('update-report.md', os.EOL);
+    }
+
+    await updateExtensions(totalRows, updateCommand, type, pluginDirectory, withoutGit);
 
     // Commits.
   } catch (error) {

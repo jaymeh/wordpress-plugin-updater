@@ -1,5 +1,7 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
+const os = require("os");
+const fs = require('fs').promises;
 // const io = require('@actions/io');
 
 const { findInFile } = require('./filesystem');
@@ -9,32 +11,30 @@ const { updateExtensions } = require('./updates');
 // most @actions toolkit packages have async methods
 async function run() {
   try {
+    // TODO: Wrap path handling in another function.
     const wordPressPath = core.getInput('wordPressPath', {});
     core.debug(`Wordpress Path: ${wordPressPath}`);
-    // if (wordPressPath != false) {
-    //   core.debug(`Moving to: ${wordPressPath}`);
-    //   const cdPath = await io.which('cd');
-    //   core.debug(cdPath);
-    //   let cdCommand = await exec.exec('cd', wordPressPath);
-    //   core.debug(cdCommand);
-    // }
-
-    await exec.exec('ls', '-la');
-    await exec.exec('pwd');
+    let wordPressPathTrailingSlash = wordPressPath;
+    if (wordPressPath != false) {
+      // Add trailing slash if not present.
+      if (!wordPressPath.endsWith('/')) {
+        core.debug('Wordpress Path does not end with a slash, adding one now.');
+        wordPressPathTrailingSlash = `${wordPressPath}/`;
+      }
+    }
 
     // Create update file.
     const file = 'update-report.md';
     exec.exec('touch', file);
 
-    // WP Path.
-    // const withoutGit = core.getInput('ignoreGitChanges', {});
-    const withoutGit = true;
-
-    const pluginDirectory = core.getInput('pluginDirectory', {});
+    const pluginDirectory = wordPressPathTrailingSlash + core.getInput('pluginDirectory', {});
     const databaseName = core.getInput('databaseName', {});
     const databaseUsername = core.getInput('databaseUsername', {});
     const databasePassword = core.getInput('databasePassword', {});
 
+    // WP Path.
+    // const withoutGit = core.getInput('ignoreGitChanges', {});
+    const withoutGit = true;
     if (withoutGit) {
       core.info('Ignoring git changes.');
     }
@@ -78,7 +78,13 @@ async function run() {
     const type = 'plugin';
     const totalRows = JSON.parse(updateCommand).length;
 
-    await updateExtensions(totalRows, updateCommand, type, pluginDirectory);
+    if (totalRows > 0) {
+      await fs.appendFile('update-report.md', '## Plugins');
+      await fs.appendFile('update-report.md', os.EOL);
+      await fs.appendFile('update-report.md', os.EOL);
+    }
+
+    await updateExtensions(totalRows, updateCommand, type, pluginDirectory, withoutGit);
 
     // Commits.
   } catch (error) {

@@ -8,7 +8,7 @@ inputs:
   pluginDirectory:
     description: 'Relative path to plugins'
     required: false
-    default: 'wp-content/plugins'
+    default: 'test/wordpress/wp-content/plugins'
   databaseName:
     description: 'Database name'
     required: false
@@ -24,7 +24,7 @@ inputs:
   wordPressPath:
     description: 'Relative path to directory where WordPress is installed'
     required: false
-    default: ./
+    default: false
 outputs:
   time: # output will be available to future steps
     description: 'The current time after waiting'
