@@ -26,7 +26,7 @@ jobs:
       UPDATE_LANGUAGES: true
     defaults:
       run:
-        script: bash
+        shell: bash
         working-directory: test/wordpress
     steps:
       - uses: actions/checkout@v3
