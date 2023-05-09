@@ -3979,6 +3979,8 @@ let updateExtensions = async function (totalRows, command, type, directory) {
         const status = JSON.parse(command)[i].status;
         const pluginPath = `${directory}/${name}`;
 
+        await exec.exec('echo', [`${pluginPath}/*`]);
+
         if (status === 'Updated') {
             await exec.exec('echo', [`"${pluginPath}/*"`]);
             // await exec.exec('git', ['add', "${pluginPath}/*"]);
