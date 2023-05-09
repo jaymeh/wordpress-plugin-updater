@@ -48,9 +48,9 @@ jobs:
       - name: Install WordPress
         run: |
           php wp-cli.phar core download --force
-          ls -lah
           pwd
           cd ../
+          ls -lah
 
 
       - name: Cleanup
