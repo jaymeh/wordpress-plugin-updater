@@ -60,6 +60,6 @@ jobs:
 
       - name: Run the action.
         uses: jaymeh/wordpress-plugin-updater@feature/creating_action
-        working-directory: test/wordpress
         with:
           wordPressPath: test/wordpress
+          working-directory: test/wordpress
