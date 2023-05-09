@@ -4219,6 +4219,9 @@ async function run() {
 
     // Download WP-CLI.
     await exec.exec('curl', ['-O', 'https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar']);
+
+    // TODO: Some projects may already have a wp-config.php file as part of the repo.
+    // if it exists, we keep a note of it in a variable, force overwrite and remember to discard any changes we make in a later step.
     await exec.exec('php', ['wp-cli.phar', 'config', 'create', `--path=${wordPressPath}`, `--dbname=${databaseName}`, `--dbuser=${databaseUsername}`, `--dbpass=${databasePassword}`]);
     await exec.exec('php', ['wp-cli.phar', 'core', 'install', `--path=${wordPressPath}`, '--url="site.local"', '--title="CI Test Site"', '--admin_user=admin', '--admin_email=admin@example.com']);
 
