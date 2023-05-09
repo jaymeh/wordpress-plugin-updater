@@ -4148,7 +4148,7 @@ var __webpack_exports__ = {};
 (() => {
 const core = __nccwpck_require__(186);
 const exec = __nccwpck_require__(514);
-// const io = require('@actions/io');
+const io = __nccwpck_require__(436);
 
 const { findInFile } = __nccwpck_require__(631);
 const { addToIgnore } = __nccwpck_require__(913);
@@ -4157,15 +4157,15 @@ const { updateExtensions } = __nccwpck_require__(853);
 // most @actions toolkit packages have async methods
 async function run() {
   try {
-    // const wordPressPath = core.getInput('wordPressPath', {});
-    // core.debug(`Wordpress Path: ${wordPressPath}`);
-    // if (wordPressPath != false) {
-    //   core.debug(`Moving to: ${wordPressPath}`);
-    //   const cdPath = await io.which('cd');
-    //   core.debug(cdPath);
-    //   let cdCommand = await exec.exec('cd', wordPressPath);
-    //   core.debug(cdCommand);
-    // }
+    const wordPressPath = core.getInput('wordPressPath', {});
+    core.debug(`Wordpress Path: ${wordPressPath}`);
+    if (wordPressPath != false) {
+      core.debug(`Moving to: ${wordPressPath}`);
+      const cdPath = await io.which('cd');
+      core.debug(cdPath);
+      let cdCommand = await exec.exec('cd', wordPressPath);
+      core.debug(cdCommand);
+    }
 
     await exec.exec('ls', '-la');
     await exec.exec('pwd');

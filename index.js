@@ -1,6 +1,6 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
-// const io = require('@actions/io');
+const io = require('@actions/io');
 
 const { findInFile } = require('./filesystem');
 const { addToIgnore } = require('./git');
@@ -9,15 +9,15 @@ const { updateExtensions } = require('./updates');
 // most @actions toolkit packages have async methods
 async function run() {
   try {
-    // const wordPressPath = core.getInput('wordPressPath', {});
-    // core.debug(`Wordpress Path: ${wordPressPath}`);
-    // if (wordPressPath != false) {
-    //   core.debug(`Moving to: ${wordPressPath}`);
-    //   const cdPath = await io.which('cd');
-    //   core.debug(cdPath);
-    //   let cdCommand = await exec.exec('cd', wordPressPath);
-    //   core.debug(cdCommand);
-    // }
+    const wordPressPath = core.getInput('wordPressPath', {});
+    core.debug(`Wordpress Path: ${wordPressPath}`);
+    if (wordPressPath != false) {
+      core.debug(`Moving to: ${wordPressPath}`);
+      const cdPath = await io.which('cd');
+      core.debug(cdPath);
+      let cdCommand = await exec.exec('cd', wordPressPath);
+      core.debug(cdCommand);
+    }
 
     await exec.exec('ls', '-la');
     await exec.exec('pwd');
