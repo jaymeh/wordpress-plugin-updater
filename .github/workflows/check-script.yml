@@ -49,8 +49,6 @@ jobs:
       - name: Install and Configure WordPress
         run: |
           php wp-cli.phar core download --force --version=6.1.1
-          php wp-cli.phar config create --force --dbname=${{ env.DB_DATABASE }} --dbuser=${{ env.DB_USER }} --dbpass=${{ env.DB_PASSWORD }}
-          php wp-cli.phar core install --url=${{ env.WP_SITE_URL}} --title="${{env.WP_SITE_TITLE}}" --admin_user=${{ env.WP_ADMIN_USERNAME }} --admin_email=${{ env.WP_ADMIN_EMAIL }}
 
       - name: Install out of date plugins
         run: |
