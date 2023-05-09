@@ -32,6 +32,10 @@ async function run() {
     const databaseUsername = core.getInput('databaseUsername', {});
     const databasePassword = core.getInput('databasePassword', {});
 
+    // If we should update ACF Pro.
+    const updateAcfPro = core.getBooleanInput('updateAcfPro', {});
+    const acfProKey = core.getInput('acfProKey', {});
+
     // WP Path.
     // const withoutGit = core.getInput('ignoreGitChanges', {});
     const withoutGit = true;
@@ -74,15 +78,8 @@ async function run() {
     await exec.exec('php', ['wp-cli.phar', 'core', 'install', `--path=${wordPressPath}`, '--url="site.local"', '--title="CI Test Site"', '--admin_user=admin', '--admin_email=admin@example.com']);
 
     // Update Plugins.
-    const updateCommand = await exec.getExecOutput(`php wp-cli.phar plugin update --path=${wordPressPath} --all --format=json`).then((output) => {
-      core.debug(output.stdout);
-      return output.stdout;
-    }).catch((error) => { core.setFailed(error.message); })
+    const updateCommand = await exec.getExecOutput(`php wp-cli.phar plugin update --path=${wordPressPath} --all --format=json`);
     const type = 'plugin';
-
-    const commandOutput = JSON.parse(updateCommand);
-    core.debug(commandOutput);
-
     const totalRows = JSON.parse(updateCommand).length;
 
     if (totalRows > 0) {
@@ -93,11 +90,29 @@ async function run() {
 
     await updateExtensions(totalRows, updateCommand, type, pluginDirectory, withoutGit);
 
-    await fs.readFile('update-report.md', 'utf8').then((data) => {
-      core.info(data);
-    });
+    if (updateAcfPro) {
+      const output = await exec.getExecOutput('php', ['wp-cli.phar', 'plugin', 'install', `https://connect.advancedcustomfields.com/v2/plugins/download?p=pro&k=${acfProKey}`, `--path=${wordPressPath}`, '--force']);
+      core.debug(output);
 
-    core.debug('Plugin updates complete.');
+      // // Download Zip File
+      // const acf_zip_file = `${pluginDirectory}/acf-pro.zip`;
+      // const download_url = `https://connect.advancedcustomfields.com/v2/plugins/download?p=pro&k=${ACF_PRO_KEY}`;
+      // const { execSync } = require('child_process');
+      // execSync(`wget -O ${acf_zip_file} ${download_url}`);
+
+      // // Extract Zip file.
+      // const current_folder = process.cwd();
+      // process.chdir(php_path);
+      // execSync(`unzip -o ${pluginDirectory}/acf-pro.zip`);
+      // execSync(`rm ${pluginDirectory}/acf-pro.zip`);
+      // process.chdir(current_folder);
+
+      // Add all changes to git.
+      // execSync(`git add ${pluginDirectory}`);
+      // execSync(`git commit -m "Updated ACF Pro."`);
+
+      // console.log('- ACF Pro' >> ${ file });
+    }
 
     // Commits.
   } catch (error) {

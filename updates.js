@@ -3,8 +3,7 @@ const core = require('@actions/core');
 const fs = require('fs').promises;
 const os = require("os");
 
-// Update Items $1 = TOTAL_ROWS, $2 = COMMAND, $3 = TYPE (plugin, theme, language, core), $4 = DIRECTORY.
-let updateExtensions = async function (totalRows, command, type, directory) {
+let updateExtensions = async function (totalRows, command, type, directory, withoutGit) {
     core.debug(`Found ${totalRows} ${type}(s).`);
     const commandOutput = JSON.parse(command);
     for (let i = 0; i <= totalRows - 1; i++) {
@@ -20,10 +19,11 @@ let updateExtensions = async function (totalRows, command, type, directory) {
             core.info(`Updating plugin: ${name} at ${pluginPath}`);
             await exec.exec('echo', [`"${pluginPath}/*"`]);
 
-            await exec.exec('git', ['add', `${pluginPath}/*`]);
-
-            var commitMessage = `Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}.`;
-            await exec.exec('git', ['commit', '-m', commitMessage]);
+            if (!withoutGit) {
+                await exec.exec('git', ['add', `${pluginPath}/*`]);
+                var commitMessage = `Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}.`;
+                await exec.exec('git', ['commit', '-m', commitMessage]);
+            }
             await fs.appendFile('update-report.md', '- ' + commitMessage);
         }
     }

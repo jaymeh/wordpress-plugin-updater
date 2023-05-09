@@ -8,7 +8,7 @@ inputs:
   pluginDirectory:
     description: 'Relative path to plugins'
     required: false
-    default: 'test/wordpress/wp-content/plugins'
+    default: 'wp-content/plugins'
   databaseName:
     description: 'Database name'
     required: false
@@ -23,6 +23,14 @@ inputs:
     default: 'root'
   wordPressPath:
     description: 'Relative path to directory where WordPress is installed'
+    required: false
+    default: false
+  updateAcfPro:
+    description: 'Whether to try and update ACF Pro'
+    required: false
+    default: false
+  acfProKey:
+    description: 'Whether to try and update ACF Pro'
     required: false
     default: false
 outputs:
