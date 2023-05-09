@@ -21,6 +21,10 @@ inputs:
     description: 'Database password'
     required: false
     default: 'wordpress'
+  wordPressPath:
+    description: 'Relative path to directory where WordPress is installed'
+    required: false
+    default: false
 outputs:
   time: # output will be available to future steps
     description: 'The current time after waiting'

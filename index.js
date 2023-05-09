@@ -8,6 +8,11 @@ const { updateExtensions } = require('./updates');
 // most @actions toolkit packages have async methods
 async function run() {
   try {
+    const wordPressPath = core.getInput('wordPressPath', {});
+    if (wordPressPath != false) {
+      await exec.exec('cd', wordPressPath);
+    }
+
     await exec.exec('ls', '-la');
     await exec.exec('pwd');
 
