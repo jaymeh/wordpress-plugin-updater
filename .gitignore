@@ -65,9 +65,3 @@ typings/
 
 # next.js build output
 .next
-
-# Ignore Updates Versions file.
-update-report.md
-
-# Prevent wp-cli.phar script from being added to repository.
-wp-cli.phar
