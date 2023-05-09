@@ -4161,7 +4161,7 @@ async function run() {
     if (wordPressPath != false) {
       core.debug(`Moving to: ${wordPressPath}`);
       // const cdPath = await io.which('/usr/bin/cd', true);
-      let cdCommand = await exec.exec('/usr/bin/cd', wordPressPath);
+      let cdCommand = await exec.exec('/usr/bin/bash', ['cd', wordPressPath]);
       core.debug(cdCommand);
     }
 
