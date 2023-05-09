@@ -16,11 +16,11 @@ inputs:
   databaseUsername:
     description: 'Database username'
     required: false
-    default: 'wordpress'
+    default: 'root'
   databasePassword:
     description: 'Database password'
     required: false
-    default: 'wordpress'
+    default: 'root'
   wordPressPath:
     description: 'Relative path to directory where WordPress is installed'
     required: false
