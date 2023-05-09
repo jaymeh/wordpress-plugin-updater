@@ -1,6 +1,6 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
-const io = require('@actions/io');
+// const io = require('@actions/io');
 
 const { findInFile } = require('./filesystem');
 const { addToIgnore } = require('./git');
@@ -11,13 +11,13 @@ async function run() {
   try {
     const wordPressPath = core.getInput('wordPressPath', {});
     core.debug(`Wordpress Path: ${wordPressPath}`);
-    if (wordPressPath != false) {
-      core.debug(`Moving to: ${wordPressPath}`);
-      const cdPath = await io.which('cd');
-      core.debug(cdPath);
-      let cdCommand = await exec.exec('cd', wordPressPath);
-      core.debug(cdCommand);
-    }
+    // if (wordPressPath != false) {
+    //   core.debug(`Moving to: ${wordPressPath}`);
+    //   const cdPath = await io.which('cd');
+    //   core.debug(cdPath);
+    //   let cdCommand = await exec.exec('cd', wordPressPath);
+    //   core.debug(cdCommand);
+    // }
 
     await exec.exec('ls', '-la');
     await exec.exec('pwd');
@@ -67,11 +67,11 @@ async function run() {
 
     // Download WP-CLI.
     await exec.exec('curl', ['-O', 'https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar']);
-    await exec.exec('php', ['wp-cli.phar', 'config', 'create', `--dbname=${databaseName}`, `--dbuser="${databaseUsername} "`, `--dbpass="${databasePassword} "`]);
-    await exec.exec('php', ['wp-cli.phar', 'core', 'install', '--url="site.local"', '--title="CI Test Site"', '--admin_user=admin', '--admin_email=admin@example.com']);
+    await exec.exec('php', ['wp-cli.phar', 'config', 'create', `--path=${wordPressPath}`, `--dbname=${databaseName}`, `--dbuser="${databaseUsername} "`, `--dbpass="${databasePassword} "`]);
+    await exec.exec('php', ['wp-cli.phar', 'core', 'install', `--path=${wordPressPath}`, '--url="site.local"', '--title="CI Test Site"', '--admin_user=admin', '--admin_email=admin@example.com']);
 
     // Update Plugins.
-    const updateCommand = await exec.exec(`php wp-cli.phar plugin update --all --format=json`);
+    const updateCommand = await exec.exec(`php wp-cli.phar plugin update --path=${wordPressPath} --all --format=json`);
     const type = 'plugin';
     const totalRows = JSON.parse(updateCommand).length;
 

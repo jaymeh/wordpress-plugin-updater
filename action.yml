@@ -24,7 +24,7 @@ inputs:
   wordPressPath:
     description: 'Relative path to directory where WordPress is installed'
     required: false
-    default: false
+    default: ./
 outputs:
   time: # output will be available to future steps
     description: 'The current time after waiting'
