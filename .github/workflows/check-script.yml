@@ -51,7 +51,7 @@ jobs:
           php wp-cli.phar core download --force
           ls -lah
           pwd
-          which cd
+          cd ../
 
 
       - name: Cleanup
