@@ -12,6 +12,7 @@ async function run() {
     core.debug(`Wordpress Path: ${wordPressPath}`);
     if (wordPressPath != false) {
       core.debug(`Moving to: ${wordPressPath}`);
+      core.debug(await exec.exec('which', 'cd'));
       let cdCommand = await exec.exec('cd', wordPressPath);
       core.debug(cdCommand);
     }
