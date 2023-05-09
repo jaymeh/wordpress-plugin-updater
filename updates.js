@@ -1,7 +1,9 @@
 const exec = require('@actions/exec');
+const core = require('@actions/core');
 
 // Update Items $1 = TOTAL_ROWS, $2 = COMMAND, $3 = TYPE (plugin, theme, language, core), $4 = DIRECTORY.
 let updateExtensions = async function (totalRows, command, type, directory) {
+    core.debug(`Updating ${type}s.`);
     for (let i = 0; i <= totalRows - 1; i++) {
         // const version = JSON.parse(command)[i].old_version;
         // const updatedVersion = JSON.parse(command)[i].new_version;
