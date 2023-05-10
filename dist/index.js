@@ -4000,7 +4000,6 @@ let updateExtensions = async function (totalRows, command, type, directory, with
 
     if (totalRows > 0) {
         await fs.appendFile('update-report.md', os.EOL);
-        await fs.appendFile('update-report.md', os.EOL);
     }
 };
 
@@ -4191,6 +4190,7 @@ async function run() {
     exec.exec('touch', file);
 
     const pluginDirectory = wordPressPathTrailingSlash + core.getInput('pluginDirectory', {});
+    const themeDirectory = wordPressPathTrailingSlash + core.getInput('themeDirectory', {});
     const databaseName = core.getInput('databaseName', {});
     const databaseUsername = core.getInput('databaseUsername', {});
     const databasePassword = core.getInput('databasePassword', {});
@@ -4200,6 +4200,7 @@ async function run() {
     const acfProKey = core.getInput('acfProKey', {});
 
     // WP Path.
+    // TODO: Uncomment when done.
     // const withoutGit = core.getInput('ignoreGitChanges', {});
     const withoutGit = true;
     if (withoutGit) {
@@ -4237,46 +4238,51 @@ async function run() {
 
     // TODO: Some projects may already have a wp-config.php file as part of the repo.
     // if it exists, we keep a note of it in a variable, force overwrite and remember to discard any changes we make in a later step.
+
+    // TODO: Also check what happens if the path is empty or set to "./".
     await exec.exec('php', ['wp-cli.phar', 'config', 'create', `--path=${wordPressPath}`, `--dbname=${databaseName}`, `--dbuser=${databaseUsername}`, `--dbpass=${databasePassword}`]);
     await exec.exec('php', ['wp-cli.phar', 'core', 'install', `--path=${wordPressPath}`, '--url="site.local"', '--title="CI Test Site"', '--admin_user=admin', '--admin_email=admin@example.com']);
 
     // Update Plugins.
-    const updateCommand = await exec.getExecOutput(`php wp-cli.phar plugin update --path=${wordPressPath} --all --format=json`)
+    const pluginUpdateCommand = await exec.getExecOutput(`php wp-cli.phar plugin update --path=${wordPressPath} --all --format=json`)
       .then((output) => { return output.stdout; })
       .catch((error) => { return error.stderr; });
-    const type = 'plugin';
-    const totalRows = JSON.parse(updateCommand).length;
+    const totalPluginsToUpdate = JSON.parse(pluginUpdateCommand).length;
 
-    if (totalRows > 0) {
+    if (totalPluginsToUpdate > 0) {
       await fs.appendFile('update-report.md', '## Plugins');
+      await fs.appendFile('update-report.md', os.EOL);
+      await fs.appendFile('update-report.md', os.EOL);
+
+      await updateExtensions(totalPluginsToUpdate, pluginUpdateCommand, 'plugin', pluginDirectory, withoutGit);
+      await fs.appendFile('update-report.md', os.EOL);
+    }
+
+    if (updateAcfPro) {
+      await exec.exec('php', ['wp-cli.phar', 'plugin', 'install', `https://connect.advancedcustomfields.com/v2/plugins/download?p=pro&k=${acfProKey}`, `--path=${wordPressPath}`, '--force']);
+
+      // Add all changes to git.
+      await exec.exec(`git add ${pluginDirectory}`);
+      await exec.exec(`git commit -m "Updated ACF Pro."`);
+
+      await fs.appendFile('update-report.md', '- Updated ACF Pro.');
       await fs.appendFile('update-report.md', os.EOL);
       await fs.appendFile('update-report.md', os.EOL);
     }
 
-    await updateExtensions(totalRows, updateCommand, type, pluginDirectory, withoutGit);
+    // Update Themes.
+    const updateCommand = await exec.getExecOutput(`php wp-cli.phar theme update --path=${wordPressPath} --all --format=json`)
+      .then((output) => { return output.stdout; })
+      .catch((error) => { return error.stderr; });
+    let totalThemesToUpdate = JSON.parse(updateCommand).length;
 
-    if (updateAcfPro) {
-      const output = await exec.getExecOutput('php', ['wp-cli.phar', 'plugin', 'install', `https://connect.advancedcustomfields.com/v2/plugins/download?p=pro&k=${acfProKey}`, `--path=${wordPressPath}`, '--force']);
-      core.debug(output);
+    if (totalThemesToUpdate > 0) {
+      await fs.appendFile('update-report.md', '## Themes');
+      await fs.appendFile('update-report.md', os.EOL);
+      await fs.appendFile('update-report.md', os.EOL);
 
-      // // Download Zip File
-      // const acf_zip_file = `${pluginDirectory}/acf-pro.zip`;
-      // const download_url = `https://connect.advancedcustomfields.com/v2/plugins/download?p=pro&k=${ACF_PRO_KEY}`;
-      // const { execSync } = require('child_process');
-      // execSync(`wget -O ${acf_zip_file} ${download_url}`);
-
-      // // Extract Zip file.
-      // const current_folder = process.cwd();
-      // process.chdir(php_path);
-      // execSync(`unzip -o ${pluginDirectory}/acf-pro.zip`);
-      // execSync(`rm ${pluginDirectory}/acf-pro.zip`);
-      // process.chdir(current_folder);
-
-      // Add all changes to git.
-      // execSync(`git add ${pluginDirectory}`);
-      // execSync(`git commit -m "Updated ACF Pro."`);
-
-      // console.log('- ACF Pro' >> ${ file });
+      await updateExtensions(totalThemesToUpdate, updateCommand, 'theme', themeDirectory, withoutGit);
+      await fs.appendFile('update-report.md', os.EOL);
     }
 
     // Commits.

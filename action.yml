@@ -9,6 +9,10 @@ inputs:
     description: 'Relative path to plugins'
     required: false
     default: 'wp-content/plugins'
+  themeDirectory:
+    description: 'Relative path to themes'
+    required: false
+    default: 'wp-content/themes'
   databaseName:
     description: 'Database name'
     required: false

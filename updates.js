@@ -30,7 +30,6 @@ let updateExtensions = async function (totalRows, command, type, directory, with
 
     if (totalRows > 0) {
         await fs.appendFile('update-report.md', os.EOL);
-        await fs.appendFile('update-report.md', os.EOL);
     }
 };
 
