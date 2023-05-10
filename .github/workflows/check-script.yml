@@ -1,4 +1,4 @@
-name: Maintenance Updates
+name: Check Action
 
 on: [push, pull_request]
 
