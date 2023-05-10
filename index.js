@@ -36,6 +36,8 @@ async function run() {
     // If we should update ACF Pro.
     const updateAcfPro = core.getBooleanInput('updateAcfPro', {});
     const acfProKey = core.getInput('acfProKey', {});
+    const committerEmail = core.getInput('committerEmail', {});
+    const committerName = core.getInput('committerName', {});
 
     // WP Path.
     // TODO: Uncomment when done.
@@ -71,6 +73,12 @@ async function run() {
       await exec.exec('git', ['commit', '-m', 'Prevent wp-cli.phar script from being added to repository.']);
     }
 
+    // Set the committer email and name.
+    if (!withoutGit) {
+      await exec.exec('git', ['config', '--global', 'user.email', committerEmail]);
+      await exec.exec('git', ['config', '--global', 'user.name', committerName]);
+    }
+
     // Download WP-CLI.
     await exec.exec('curl', ['-O', 'https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar']);
 
@@ -99,9 +107,11 @@ async function run() {
     if (updateAcfPro) {
       await exec.exec('php', ['wp-cli.phar', 'plugin', 'install', `https://connect.advancedcustomfields.com/v2/plugins/download?p=pro&k=${acfProKey}`, `--path=${wordPressPath}`, '--force']);
 
-      // Add all changes to git.
-      await exec.exec(`git add ${pluginDirectory}`);
-      await exec.exec(`git commit -m "Updated ACF Pro."`);
+      if (!withoutGit) {
+        // Add all changes to git.
+        await exec.exec(`git add ${pluginDirectory}`);
+        await exec.exec(`git commit -m "Updated ACF Pro."`);
+      }
 
       await fs.appendFile('update-report.md', '- Updated ACF Pro.');
       await fs.appendFile('update-report.md', os.EOL);

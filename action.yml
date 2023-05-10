@@ -37,6 +37,14 @@ inputs:
     description: 'Whether to try and update ACF Pro'
     required: false
     default: false
+  committerName:
+    description: 'Name of the committer'
+    required: false
+    default: 'GitHub Actions'
+  committerEmail:
+    description: 'Email of the committer'
+    required: false
+    default: 'github-actions@github.com'
 outputs:
   time: # output will be available to future steps
     description: 'The current time after waiting'
