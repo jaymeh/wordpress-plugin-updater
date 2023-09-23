@@ -4319,11 +4319,14 @@ async function run() {
     withoutGit = withoutGit == 'true';
     if (withoutGit) {
       core.info('Ignoring git changes.');
-      await exec.exec('git', ['config', 'advice.addIgnoredFile', false]);
     }
 
     // Set the committer email and name.
     if (!withoutGit) {
+      // Ignore warnings about not committing ignored files.
+      await exec.exec('git', ['config', 'advice.addIgnoredFile', false]);
+
+      // Setup Committer details.
       await exec.exec('git', ['config', '--global', 'user.email', committerEmail]);
       await exec.exec('git', ['config', '--global', 'user.name', committerName]);
     }
