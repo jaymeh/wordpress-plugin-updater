@@ -20,6 +20,7 @@ let updateExtensions = async function (totalRows, command, type, directory, with
             await exec.exec('echo', [`"${pluginPath}/*"`]);
 
             var updateMessage = `Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}.`;
+            let failed = false;
             if (!withoutGit) {
                 // TODO: Test we can actually add first.
                 try {
@@ -32,7 +33,10 @@ let updateExtensions = async function (totalRows, command, type, directory, with
                 }
             }
 
-            await fs.appendFile('update-report.md', `- ${updateMessage}`);
+            if (!failed) {
+                // TODO: Think about adding a status here to say if it failed.
+                await fs.appendFile('update-report.md', `- ${updateMessage}`);
+            }
         }
     }
 };
@@ -110,9 +114,17 @@ let updateLanguages = async function (wordPressPath, withoutGit) {
         }
 
         if (!withoutGit) {
-            // Add all changes to git.
-            await exec.exec(`git add ${wordPressPath}`);
-            await exec.exec(`git commit -m "Updated ${languages[i]} language files."`);
+            // Check if working dir is clean.
+            /*eslint no-unused-vars: ["error", { "args": "none" }]*/
+            const dirty = await exec.exec('git', ['diff', '--quiet', '--exit-code'])
+                .then((output) => { return false; })
+                .catch((error) => { return true; });
+
+            if (dirty) {
+                // Add all changes to git.
+                await exec.exec(`git add ${wordPressPath}`);
+                await exec.exec(`git commit -m "Updated ${languages[i]} language files."`);
+            }
         }
     }
 }
