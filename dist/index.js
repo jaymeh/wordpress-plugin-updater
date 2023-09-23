@@ -604,7 +604,7 @@ class OidcClient {
                 .catch(error => {
                 throw new Error(`Failed to get ID Token. \n 
         Error Code : ${error.statusCode}\n 
-        Error Message: ${error.result.message}`);
+        Error Message: ${error.message}`);
             });
             const id_token = (_a = res.result) === null || _a === void 0 ? void 0 : _a.value;
             if (!id_token) {
@@ -1992,6 +1992,19 @@ class HttpClientResponse {
             }));
         });
     }
+    readBodyBuffer() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+                const chunks = [];
+                this.message.on('data', (chunk) => {
+                    chunks.push(chunk);
+                });
+                this.message.on('end', () => {
+                    resolve(Buffer.concat(chunks));
+                });
+            }));
+        });
+    }
 }
 exports.HttpClientResponse = HttpClientResponse;
 function isHttps(requestUrl) {
@@ -2496,7 +2509,13 @@ function getProxyUrl(reqUrl) {
         }
     })();
     if (proxyVar) {
-        return new URL(proxyVar);
+        try {
+            return new URL(proxyVar);
+        }
+        catch (_a) {
+            if (!proxyVar.startsWith('http://') && !proxyVar.startsWith('https://'))
+                return new URL(`http://${proxyVar}`);
+        }
     }
     else {
         return undefined;
@@ -2506,6 +2525,10 @@ exports.getProxyUrl = getProxyUrl;
 function checkBypass(reqUrl) {
     if (!reqUrl.hostname) {
         return false;
+    }
+    const reqHost = reqUrl.hostname;
+    if (isLoopbackAddress(reqHost)) {
+        return true;
     }
     const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
     if (!noProxy) {
@@ -2532,13 +2555,24 @@ function checkBypass(reqUrl) {
         .split(',')
         .map(x => x.trim().toUpperCase())
         .filter(x => x)) {
-        if (upperReqHosts.some(x => x === upperNoProxyItem)) {
+        if (upperNoProxyItem === '*' ||
+            upperReqHosts.some(x => x === upperNoProxyItem ||
+                x.endsWith(`.${upperNoProxyItem}`) ||
+                (upperNoProxyItem.startsWith('.') &&
+                    x.endsWith(`${upperNoProxyItem}`)))) {
             return true;
         }
     }
     return false;
 }
 exports.checkBypass = checkBypass;
+function isLoopbackAddress(host) {
+    const hostLower = host.toLowerCase();
+    return (hostLower === 'localhost' ||
+        hostLower.startsWith('127.') ||
+        hostLower.startsWith('[::1]') ||
+        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
+}
 //# sourceMappingURL=proxy.js.map
 
 /***/ }),
@@ -4267,6 +4301,7 @@ async function run() {
     }
 
     if (updateAcfPro) {
+      // TODO: See if we can find a way to get the version of ACF Pro.
       await exec.exec('php', ['wp-cli.phar', 'plugin', 'install', `https://connect.advancedcustomfields.com/v2/plugins/download?p=pro&k=${acfProKey}`, `--path=${wordPressPath}`, '--force']);
 
       if (!withoutGit) {
@@ -4295,7 +4330,28 @@ async function run() {
       await fs.appendFile('update-report.md', os.EOL);
     }
 
-    // Commits.
+    // Core.
+    const coreUpdateCommand = await exec.getExecOutput(`php wp-cli.phar core update --path=${wordPressPath} --format=json`)
+      .then((output) => { return output.stdout; })
+      .catch((error) => { return error.stderr; });
+    const coreUpdateCommandOutput = JSON.parse(coreUpdateCommand);
+
+    if (coreUpdateCommandOutput.status === 'Updated') {
+      const version = coreUpdateCommandOutput.old_version;
+      const updatedVersion = coreUpdateCommandOutput.new_version;
+
+      await fs.appendFile('update-report.md', '## Core');
+      await fs.appendFile('update-report.md', os.EOL);
+      await fs.appendFile('update-report.md', os.EOL);
+      await fs.appendFile('update-report.md', `- Updated Core from ${version} to ${updatedVersion}.`);
+      await fs.appendFile('update-report.md', os.EOL);
+
+      if (!withoutGit) {
+        // Add all changes to git.
+        await exec.exec(`git add ${wordPressPath}`);
+        await exec.exec(`git commit -m "Updated Core from ${version} to ${updatedVersion}."`);
+      }
+    }
   } catch (error) {
     core.setFailed(error.message);
   }

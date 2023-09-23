@@ -105,6 +105,7 @@ async function run() {
     }
 
     if (updateAcfPro) {
+      // TODO: See if we can find a way to get the version of ACF Pro.
       await exec.exec('php', ['wp-cli.phar', 'plugin', 'install', `https://connect.advancedcustomfields.com/v2/plugins/download?p=pro&k=${acfProKey}`, `--path=${wordPressPath}`, '--force']);
 
       if (!withoutGit) {
@@ -133,7 +134,28 @@ async function run() {
       await fs.appendFile('update-report.md', os.EOL);
     }
 
-    // Commits.
+    // Core.
+    const coreUpdateCommand = await exec.getExecOutput(`php wp-cli.phar core update --path=${wordPressPath} --format=json`)
+      .then((output) => { return output.stdout; })
+      .catch((error) => { return error.stderr; });
+    const coreUpdateCommandOutput = JSON.parse(coreUpdateCommand);
+
+    if (coreUpdateCommandOutput.status === 'Updated') {
+      const version = coreUpdateCommandOutput.old_version;
+      const updatedVersion = coreUpdateCommandOutput.new_version;
+
+      await fs.appendFile('update-report.md', '## Core');
+      await fs.appendFile('update-report.md', os.EOL);
+      await fs.appendFile('update-report.md', os.EOL);
+      await fs.appendFile('update-report.md', `- Updated Core from ${version} to ${updatedVersion}.`);
+      await fs.appendFile('update-report.md', os.EOL);
+
+      if (!withoutGit) {
+        // Add all changes to git.
+        await exec.exec(`git add ${wordPressPath}`);
+        await exec.exec(`git commit -m "Updated Core from ${version} to ${updatedVersion}."`);
+      }
+    }
   } catch (error) {
     core.setFailed(error.message);
   }
