@@ -16,11 +16,9 @@ let addToIgnore = async function (fileToIgnore, comment = null) {
 
 let isDirty = async function () {
     /*eslint no-unused-vars: ["error", { "args": "none" }]*/
-    const isDirty = await exec.exec('git', ['diff', '--quiet', '--exit-code'])
-        .then((output) => { return false; })
-        .catch((error) => { return true; });
+    const isDirty = await exec.getExecOutput('git', ['diff', '--porcelain']);
 
-    return isDirty;
+    return isDirty != '';
 }
 
 module.exports = { addToIgnore, isDirty };
