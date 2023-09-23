@@ -4025,9 +4025,17 @@ let updateExtensions = async function (totalRows, command, type, directory, with
 
             var updateMessage = `Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}.`;
             if (!withoutGit) {
-                await exec.exec('git', ['add', `${pluginPath}/*`]);
-                await exec.exec('git', ['commit', '-m', updateMessage]);
+                // TODO: Test we can actually add first.
+                try {
+                    await exec.exec('git', ['add', `${pluginPath}/*`, '--dry-run']);
+
+                    await exec.exec('git', ['add', `${pluginPath}/*`]);
+                    await exec.exec('git', ['commit', '-m', updateMessage]);
+                } catch (error) {
+                    core.info(error.stderr);
+                }
             }
+
             await fs.appendFile('update-report.md', `- ${updateMessage}`);
         }
     }
