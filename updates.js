@@ -19,21 +19,25 @@ let updateExtensions = async function (totalRows, command, type, directory, with
         if (status === 'Updated') {
             core.info(`Updating plugin: ${name} at ${pluginPath}`);
             await exec.exec('echo', [`"${pluginPath}/*"`]);
-            const isDirty = await git.isDirty();
 
             var updateMessage = `Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}.`;
+            let failed = false;
             if (!withoutGit) {
                 // TODO: Test we can actually add first.
-                if (isDirty) {
+                try {
+                    await exec.exec('git', ['add', `${pluginPath}/*`, '--dry-run']);
+
                     await exec.exec('git', ['add', `${pluginPath}/*`]);
                     await exec.exec('git', ['commit', '-m', updateMessage]);
+                } catch (error) {
+                    core.info(error.stderr);
+                    failed = true;
                 }
             }
 
-            if (isDirty) {
+            if (!failed) {
                 // TODO: Think about adding a status here to say if it failed.
                 await fs.appendFile('update-report.md', `- ${updateMessage}`);
-                await fs.appendFile('update-report.md', os.EOL);
             }
         }
     }
