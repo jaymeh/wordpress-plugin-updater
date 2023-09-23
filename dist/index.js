@@ -4331,13 +4331,17 @@ async function run() {
     }
 
     // Core.
-    const oldCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`);
+    const oldCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`)
+      .then((output) => { return output.stdout; })
+      .catch((error) => { return error.stderr; });
 
     await exec.getExecOutput(`php wp-cli.phar core update --path=${wordPressPath}`)
       .then((output) => { return output.stdout; })
       .catch((error) => { return error.stderr; });
 
-    const newCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`);
+    const newCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`)
+      .then((output) => { return output.stdout; })
+      .catch((error) => { return error.stderr; });
 
     if (oldCoreVersion != newCoreVersion) {
       await fs.appendFile('update-report.md', '## Core');
