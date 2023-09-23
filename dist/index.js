@@ -45,7 +45,10 @@ let addToIgnore = async function (fileToIgnore, comment = null) {
 };
 
 let isDirty = async function () {
-    const isDirty = await exec.getExecOutput('git', ['status', '--short']);
+    /*eslint no-unused-vars: ["error", { "args": "none" }]*/
+    const isDirty = await exec.exec('git', ['diff', '--exit-code'])
+        .then((output) => { return false; })
+        .catch((error) => { return true; });
     return isDirty != '';
 }
 
