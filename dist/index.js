@@ -4023,12 +4023,13 @@ let updateExtensions = async function (totalRows, command, type, directory, with
             core.info(`Updating plugin: ${name} at ${pluginPath}`);
             await exec.exec('echo', [`"${pluginPath}/*"`]);
 
+            var updateMessage = `Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}.`;
             if (!withoutGit) {
                 await exec.exec('git', ['add', `${pluginPath}/*`]);
-                var commitMessage = `Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}.`;
-                await exec.exec('git', ['commit', '-m', commitMessage]);
+                await exec.exec('git', ['commit', '-m', updateMessage]);
             }
-            await fs.appendFile('update-report.md', '- ' + commitMessage);
+            await fs.appendFile('update-report.md', '- ' + updateMessage);
+            await fs.appendFile('update-report.md', os.EOL);
         }
     }
 
