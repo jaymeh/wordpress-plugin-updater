@@ -6,7 +6,7 @@ const fs = require('fs').promises;
 
 const { findInFile } = require('./filesystem');
 const { addToIgnore } = require('./git');
-const { updateExtensions } = require('./updates');
+const { updateExtensions, updateACFPro, updateCore, updateLanguages } = require('./updates');
 
 // most @actions toolkit packages have async methods
 async function run() {
@@ -47,6 +47,12 @@ async function run() {
       core.info('Ignoring git changes.');
     }
 
+    // Set the committer email and name.
+    if (!withoutGit) {
+      await exec.exec('git', ['config', '--global', 'user.email', committerEmail]);
+      await exec.exec('git', ['config', '--global', 'user.name', committerName]);
+    }
+
     // Checks for update-report.md in .gitignore.
     const updateReportFound = await findInFile('.gitignore', 'update-report.md');
     if (!updateReportFound) {
@@ -71,12 +77,6 @@ async function run() {
     if (!withoutGit) {
       await exec.exec('git', ['add', '.gitignore']);
       await exec.exec('git', ['commit', '-m', 'Prevent wp-cli.phar script from being added to repository.']);
-    }
-
-    // Set the committer email and name.
-    if (!withoutGit) {
-      await exec.exec('git', ['config', '--global', 'user.email', committerEmail]);
-      await exec.exec('git', ['config', '--global', 'user.name', committerName]);
     }
 
     // Download WP-CLI.
@@ -104,17 +104,7 @@ async function run() {
     }
 
     if (updateAcfPro) {
-      // TODO: See if we can find a way to get the version of ACF Pro.
-      await exec.exec('php', ['wp-cli.phar', 'plugin', 'install', `https://connect.advancedcustomfields.com/v2/plugins/download?p=pro&k=${acfProKey}`, `--path=${wordPressPath}`, '--force']);
-
-      if (!withoutGit) {
-        // Add all changes to git.
-        await exec.exec(`git add ${pluginDirectory}`);
-        await exec.exec(`git commit -m "Updated ACF Pro."`);
-      }
-
-      await fs.appendFile('update-report.md', '- Updated ACF Pro.');
-      await fs.appendFile('update-report.md', os.EOL);
+      await updateACFPro(withoutGit, acfProKey, pluginDirectory, wordPressPath);
     }
 
     // Update Themes.
@@ -133,38 +123,14 @@ async function run() {
     }
 
     // Core.
-    let oldCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`)
-      .then((output) => { return output.stdout; })
-      .catch((error) => { return error.stderr; });
+    await updateCore(wordPressPath, withoutGit);
 
-    oldCoreVersion = oldCoreVersion.replace(/(\r\n|\n|\r)/gm, "");
+    // Update Languages/Translations.
+    await updateLanguages(wordPressPath, withoutGit);
 
-    await exec.getExecOutput(`php wp-cli.phar core update --path=${wordPressPath}`)
-      .then((output) => { return output.stdout; })
-      .catch((error) => { return error.stderr; });
-
-    let newCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`)
-      .then((output) => { return output.stdout; })
-      .catch((error) => { return error.stderr; });
-
-    newCoreVersion = newCoreVersion.replace(/(\r\n|\n|\r)/gm, "");
-
-    if (oldCoreVersion != newCoreVersion) {
-      await fs.appendFile('update-report.md', os.EOL);
-      await fs.appendFile('update-report.md', '## Core');
-      await fs.appendFile('update-report.md', os.EOL);
-      await fs.appendFile('update-report.md', os.EOL);
-      await fs.appendFile('update-report.md', `- Updated Core from ${oldCoreVersion} to ${newCoreVersion}.`);
-      await fs.appendFile('update-report.md', os.EOL);
-
-      if (!withoutGit) {
-        // Add all changes to git.
-        await exec.exec(`git add ${wordPressPath}`);
-        await exec.exec(`git commit -m "Updated Core from ${oldCoreVersion} to ${newCoreVersion}."`);
-      }
-    }
-
-    await exec.exec('cat', ['update-report.md']);
+    // Output the update report from the action.
+    const updateReport = await fs.readFile('update-report.md', 'utf8');
+    core.setOutput('updateReport', updateReport);
   } catch (error) {
     core.setFailed(error.message);
   }

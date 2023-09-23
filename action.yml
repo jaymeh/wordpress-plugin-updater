@@ -46,8 +46,8 @@ inputs:
     required: false
     default: 'github-actions@github.com'
 outputs:
-  time: # output will be available to future steps
-    description: 'The current time after waiting'
+  updateReports:
+    description: 'A report of everything that was updated.'
 runs:
   using: 'node16'
   main: 'dist/index.js'
