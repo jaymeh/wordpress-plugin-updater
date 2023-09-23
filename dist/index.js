@@ -4319,6 +4319,7 @@ async function run() {
     withoutGit = withoutGit == 'true';
     if (withoutGit) {
       core.info('Ignoring git changes.');
+      await exec.exec('git', ['config', 'advice.addIgnoredFile', false]);
     }
 
     // Set the committer email and name.
@@ -4405,6 +4406,15 @@ async function run() {
     // Output the update report from the action.
     const updateReport = await fs.readFile('update-report.md', 'utf8');
     core.setOutput('updateReport', updateReport);
+
+    // TODO: Output a branch name variable based on this bash:
+    /*
+      full_date=$(date +"%d-%m-%Y")
+      branch_date=$(date +"%d-%b-%y")
+      branch_name=maintenance/${branch_date,,}
+      echo branch_name=$branch_name >> $GITHUB_OUTPUT
+      echo date=$full_date >> $GITHUB_OUTPUT
+    */
   } catch (error) {
     core.setFailed(error.message);
   }
