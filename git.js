@@ -19,7 +19,7 @@ let isDirty = async function () {
     const isDirty = await exec.exec('git', ['diff', '--exit-code'])
         .then((output) => { return false; })
         .catch((error) => { return true; });
-    return isDirty != '';
+    return isDirty;
 }
 
 module.exports = { addToIgnore, isDirty };
