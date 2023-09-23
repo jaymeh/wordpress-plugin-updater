@@ -115,8 +115,9 @@ let updateLanguages = async function (wordPressPath, withoutGit) {
         }
 
         if (!withoutGit) {
+            const isDirty = await git.isDirty()
             // Check if working dir is clean.
-            if (git.isDirty()) {
+            if (isDirty) {
                 // Add all changes to git.
                 await exec.exec(`git add ${wordPressPath}`);
                 await exec.exec(`git commit -m "Updated ${languages[i]} language files."`);
