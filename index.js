@@ -156,6 +156,8 @@ async function run() {
         await exec.exec(`git commit -m "Updated Core from ${oldCoreVersion} to ${newCoreVersion}."`);
       }
     }
+
+    await exec.exec('cat', ['update-report.md']);
   } catch (error) {
     core.setFailed(error.message);
   }
