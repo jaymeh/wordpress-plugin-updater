@@ -43,8 +43,7 @@ async function run() {
     const committerName = core.getInput('committerName', {});
 
     // WP Path.
-    let withoutGit = core.getInput('ignoreGitChanges', {});
-    withoutGit = withoutGit == 'true';
+    let withoutGit = core.getBooleanInput('ignoreGitChanges', {});
     if (withoutGit) {
       core.info('Ignoring git changes.');
     }
@@ -121,6 +120,7 @@ async function run() {
     let totalThemesToUpdate = JSON.parse(updateCommand).length;
 
     if (totalThemesToUpdate > 0) {
+      // TODO: Add a check to see if the language files are already up to date before putting this in.
       await fs.appendFile('update-report.md', os.EOL);
       await fs.appendFile('update-report.md', '## Themes');
       await fs.appendFile('update-report.md', os.EOL);

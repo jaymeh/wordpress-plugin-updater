@@ -4107,6 +4107,7 @@ let updateCore = async function (wordPressPath, withoutGit) {
 
 let updateLanguages = async function (wordPressPath, withoutGit) {
     // TODO: Function could do with a little bit of cleanup.
+    // TODO: Add a check to see if the language files are already up to date before parsing this.
     await fs.appendFile('update-report.md', os.EOL);
     await fs.appendFile('update-report.md', '## Languages');
     await fs.appendFile('update-report.md', os.EOL);
@@ -4125,13 +4126,10 @@ let updateLanguages = async function (wordPressPath, withoutGit) {
 
         await exec.getExecOutput(`php wp-cli.phar language ${languages[i]} update  ${all} --path=${wordPressPath}`);
         const isDirty = await git.isDirty();
-        if (!withoutGit) {
-            // Check if working dir is clean.
-            if (isDirty) {
-                // Add all changes to git.
-                await exec.exec(`git add ${wordPressPath}`);
-                await exec.exec(`git commit -m "Updated ${languages[i]} language files."`);
-            }
+        if (!withoutGit && isDirty) {
+            // Add all changes to git.
+            await exec.exec(`git add ${wordPressPath}`);
+            await exec.exec(`git commit -m "Updated ${languages[i]} language files."`);
         }
 
         if (isDirty) {
@@ -4343,8 +4341,7 @@ async function run() {
     const committerName = core.getInput('committerName', {});
 
     // WP Path.
-    let withoutGit = core.getInput('ignoreGitChanges', {});
-    withoutGit = withoutGit == 'true';
+    let withoutGit = core.getBooleanInput('ignoreGitChanges', {});
     if (withoutGit) {
       core.info('Ignoring git changes.');
     }
@@ -4421,6 +4418,7 @@ async function run() {
     let totalThemesToUpdate = JSON.parse(updateCommand).length;
 
     if (totalThemesToUpdate > 0) {
+      // TODO: Add a check to see if the language files are already up to date before putting this in.
       await fs.appendFile('update-report.md', os.EOL);
       await fs.appendFile('update-report.md', '## Themes');
       await fs.appendFile('update-report.md', os.EOL);
