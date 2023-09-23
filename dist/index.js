@@ -4028,12 +4028,8 @@ let updateExtensions = async function (totalRows, command, type, directory, with
                 await exec.exec('git', ['add', `${pluginPath}/*`]);
                 await exec.exec('git', ['commit', '-m', updateMessage]);
             }
-            await fs.appendFile('update-report.md', '- ' + updateMessage);
+            await fs.appendFile('update-report.md', `- ${updateMessage}`);
         }
-    }
-
-    if (totalRows > 0) {
-        await fs.appendFile('update-report.md', os.EOL);
     }
 };
 
@@ -4319,7 +4315,8 @@ async function run() {
     const committerName = core.getInput('committerName', {});
 
     // WP Path.
-    const withoutGit = core.getInput('ignoreGitChanges', {});
+    let withoutGit = core.getInput('ignoreGitChanges', {});
+    withoutGit = withoutGit == 'true';
     if (withoutGit) {
       core.info('Ignoring git changes.');
     }

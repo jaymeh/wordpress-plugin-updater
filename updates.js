@@ -24,12 +24,8 @@ let updateExtensions = async function (totalRows, command, type, directory, with
                 await exec.exec('git', ['add', `${pluginPath}/*`]);
                 await exec.exec('git', ['commit', '-m', updateMessage]);
             }
-            await fs.appendFile('update-report.md', '- ' + updateMessage);
+            await fs.appendFile('update-report.md', `- ${updateMessage}`);
         }
-    }
-
-    if (totalRows > 0) {
-        await fs.appendFile('update-report.md', os.EOL);
     }
 };
 

@@ -43,7 +43,8 @@ async function run() {
     const committerName = core.getInput('committerName', {});
 
     // WP Path.
-    const withoutGit = core.getInput('ignoreGitChanges', {});
+    let withoutGit = core.getInput('ignoreGitChanges', {});
+    withoutGit = withoutGit == 'true';
     if (withoutGit) {
       core.info('Ignoring git changes.');
     }
