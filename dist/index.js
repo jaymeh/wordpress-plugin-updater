@@ -4052,6 +4052,7 @@ let updateExtensions = async function (totalRows, command, type, directory, with
             if (!failed) {
                 // TODO: Think about adding a status here to say if it failed.
                 await fs.appendFile('update-report.md', `- ${updateMessage}`);
+                await fs.appendFile('update-report.md', os.EOL);
             }
         }
     }
