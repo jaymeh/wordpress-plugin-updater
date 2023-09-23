@@ -30,6 +30,7 @@ module.exports = { findInFile };
 
 const fs = (__nccwpck_require__(147).promises);
 const os = __nccwpck_require__(37);
+const exec = __nccwpck_require__(514);
 
 let addToIgnore = async function (fileToIgnore, comment = null) {
     if (comment) {
@@ -43,7 +44,16 @@ let addToIgnore = async function (fileToIgnore, comment = null) {
     return true;
 };
 
-module.exports = { addToIgnore };
+let isDirty = async function () {
+    /*eslint no-unused-vars: ["error", { "args": "none" }]*/
+    const isDirty = await exec.exec('git', ['diff', '--quiet', '--exit-code'])
+        .then((output) => { return false; })
+        .catch((error) => { return true; });
+
+    return isDirty;
+}
+
+module.exports = { addToIgnore, isDirty };
 
 /***/ }),
 
@@ -4006,6 +4016,7 @@ const exec = __nccwpck_require__(514);
 const core = __nccwpck_require__(186);
 const fs = (__nccwpck_require__(147).promises);
 const os = __nccwpck_require__(37);
+const git = __nccwpck_require__(913);
 
 let updateExtensions = async function (totalRows, command, type, directory, withoutGit) {
     core.debug(`Found ${totalRows} ${type}(s).`);
@@ -4119,12 +4130,7 @@ let updateLanguages = async function (wordPressPath, withoutGit) {
 
         if (!withoutGit) {
             // Check if working dir is clean.
-            /*eslint no-unused-vars: ["error", { "args": "none" }]*/
-            const dirty = await exec.exec('git', ['diff', '--quiet', '--exit-code'])
-                .then((output) => { return false; })
-                .catch((error) => { return true; });
-
-            if (dirty) {
+            if (git.isDirty()) {
                 // Add all changes to git.
                 await exec.exec(`git add ${wordPressPath}`);
                 await exec.exec(`git commit -m "Updated ${languages[i]} language files."`);

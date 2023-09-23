@@ -2,6 +2,7 @@ const exec = require('@actions/exec');
 const core = require('@actions/core');
 const fs = require('fs').promises;
 const os = require("os");
+const git = require('./git');
 
 let updateExtensions = async function (totalRows, command, type, directory, withoutGit) {
     core.debug(`Found ${totalRows} ${type}(s).`);
@@ -115,12 +116,7 @@ let updateLanguages = async function (wordPressPath, withoutGit) {
 
         if (!withoutGit) {
             // Check if working dir is clean.
-            /*eslint no-unused-vars: ["error", { "args": "none" }]*/
-            const dirty = await exec.exec('git', ['diff', '--quiet', '--exit-code'])
-                .then((output) => { return false; })
-                .catch((error) => { return true; });
-
-            if (dirty) {
+            if (git.isDirty()) {
                 // Add all changes to git.
                 await exec.exec(`git add ${wordPressPath}`);
                 await exec.exec(`git commit -m "Updated ${languages[i]} language files."`);
