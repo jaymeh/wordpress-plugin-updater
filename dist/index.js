@@ -4298,7 +4298,6 @@ async function run() {
       await fs.appendFile('update-report.md', os.EOL);
 
       await updateExtensions(totalPluginsToUpdate, pluginUpdateCommand, 'plugin', pluginDirectory, withoutGit);
-      await fs.appendFile('update-report.md', os.EOL);
     }
 
     if (updateAcfPro) {
@@ -4312,7 +4311,6 @@ async function run() {
       }
 
       await fs.appendFile('update-report.md', '- Updated ACF Pro.');
-      await fs.appendFile('update-report.md', os.EOL);
       await fs.appendFile('update-report.md', os.EOL);
     }
 
@@ -4329,7 +4327,6 @@ async function run() {
       await fs.appendFile('update-report.md', os.EOL);
 
       await updateExtensions(totalThemesToUpdate, updateCommand, 'theme', themeDirectory, withoutGit);
-      await fs.appendFile('update-report.md', os.EOL);
     }
 
     // Core.
