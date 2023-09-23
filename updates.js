@@ -25,7 +25,6 @@ let updateExtensions = async function (totalRows, command, type, directory, with
                 await exec.exec('git', ['commit', '-m', updateMessage]);
             }
             await fs.appendFile('update-report.md', '- ' + updateMessage);
-            await fs.appendFile('update-report.md', os.EOL);
         }
     }
 
@@ -88,8 +87,8 @@ let updateLanguages = async function (wordPressPath, withoutGit) {
 
     const languages = [
         'core',
-        'plugins',
-        'themes',
+        'plugin',
+        'theme',
     ];
 
     for (let i = 0; i <= languages.length - 1; i++) {

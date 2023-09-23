@@ -4029,7 +4029,6 @@ let updateExtensions = async function (totalRows, command, type, directory, with
                 await exec.exec('git', ['commit', '-m', updateMessage]);
             }
             await fs.appendFile('update-report.md', '- ' + updateMessage);
-            await fs.appendFile('update-report.md', os.EOL);
         }
     }
 
@@ -4092,8 +4091,8 @@ let updateLanguages = async function (wordPressPath, withoutGit) {
 
     const languages = [
         'core',
-        'plugins',
-        'themes',
+        'plugin',
+        'theme',
     ];
 
     for (let i = 0; i <= languages.length - 1; i++) {
@@ -4320,9 +4319,7 @@ async function run() {
     const committerName = core.getInput('committerName', {});
 
     // WP Path.
-    // TODO: Uncomment when done.
-    // const withoutGit = core.getInput('ignoreGitChanges', {});
-    const withoutGit = true;
+    const withoutGit = core.getInput('ignoreGitChanges', {});
     if (withoutGit) {
       core.info('Ignoring git changes.');
     }
