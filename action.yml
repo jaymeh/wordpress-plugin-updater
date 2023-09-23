@@ -28,7 +28,7 @@ inputs:
   wordPressPath:
     description: 'Relative path to directory where WordPress is installed'
     required: false
-    default: ''
+    default: false
   updateAcfPro:
     description: 'Whether to try and update ACF Pro'
     required: false

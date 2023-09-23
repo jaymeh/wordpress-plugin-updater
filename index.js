@@ -12,7 +12,10 @@ const { updateExtensions, updateACFPro, updateCore, updateLanguages } = require(
 async function run() {
   try {
     // TODO: Wrap path handling in another function.
-    const wordPressPath = core.getInput('wordPressPath', {});
+    let wordPressPath = core.getInput('wordPressPath', {});
+    if (!wordPressPath) {
+      wordPressPath = __dirname;
+    }
     core.debug(`Wordpress Path: ${wordPressPath}`);
     let wordPressPathTrailingSlash = wordPressPath;
     if (wordPressPath != false) {
