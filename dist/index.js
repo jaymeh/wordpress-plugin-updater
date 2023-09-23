@@ -4033,24 +4033,21 @@ let updateExtensions = async function (totalRows, command, type, directory, with
         if (status === 'Updated') {
             core.info(`Updating plugin: ${name} at ${pluginPath}`);
             await exec.exec('echo', [`"${pluginPath}/*"`]);
+            const isDirty = await git.isDirty();
 
             var updateMessage = `Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}.`;
-            let failed = false;
             if (!withoutGit) {
                 // TODO: Test we can actually add first.
-                try {
-                    await exec.exec('git', ['add', `${pluginPath}/*`, '--dry-run']);
-
+                if (isDirty) {
                     await exec.exec('git', ['add', `${pluginPath}/*`]);
                     await exec.exec('git', ['commit', '-m', updateMessage]);
-                } catch (error) {
-                    core.info(error.stderr);
                 }
             }
 
-            if (!failed) {
+            if (isDirty) {
                 // TODO: Think about adding a status here to say if it failed.
                 await fs.appendFile('update-report.md', `- ${updateMessage}`);
+                await fs.appendFile('update-report.md', os.EOL);
             }
         }
     }
@@ -4104,6 +4101,7 @@ let updateCore = async function (wordPressPath, withoutGit) {
 };
 
 let updateLanguages = async function (wordPressPath, withoutGit) {
+    // TODO: Function could do with a little bit of cleanup.
     await fs.appendFile('update-report.md', os.EOL);
     await fs.appendFile('update-report.md', '## Languages');
     await fs.appendFile('update-report.md', os.EOL);
@@ -4120,22 +4118,20 @@ let updateLanguages = async function (wordPressPath, withoutGit) {
             all = '--all';
         }
 
-        let updateLanguages = await exec.getExecOutput(`php wp-cli.phar language ${languages[i]} update  ${all} --path=${wordPressPath}`)
-            .then((output) => { return output.stdout; })
-            .catch((error) => { return error.stderr; });
-
-        if (updateLanguages) {
-            await fs.appendFile('update-report.md', `- Updated ${languages[i]} language files.`);
-        }
-
+        await exec.getExecOutput(`php wp-cli.phar language ${languages[i]} update  ${all} --path=${wordPressPath}`);
+        const isDirty = await git.isDirty();
         if (!withoutGit) {
-            const isDirty = await git.isDirty()
             // Check if working dir is clean.
             if (isDirty) {
                 // Add all changes to git.
                 await exec.exec(`git add ${wordPressPath}`);
                 await exec.exec(`git commit -m "Updated ${languages[i]} language files."`);
             }
+        }
+
+        if (isDirty) {
+            await fs.appendFile('update-report.md', `- Updated ${languages[i]} language files.`);
+            await fs.appendFile('update-report.md', os.EOL);
         }
     }
 }
