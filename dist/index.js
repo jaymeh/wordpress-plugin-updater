@@ -4323,6 +4323,7 @@ async function run() {
     let totalThemesToUpdate = JSON.parse(updateCommand).length;
 
     if (totalThemesToUpdate > 0) {
+      await fs.appendFile('update-report.md', os.EOL);
       await fs.appendFile('update-report.md', '## Themes');
       await fs.appendFile('update-report.md', os.EOL);
       await fs.appendFile('update-report.md', os.EOL);
@@ -4332,19 +4333,24 @@ async function run() {
     }
 
     // Core.
-    const oldCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`)
+    let oldCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`)
       .then((output) => { return output.stdout; })
       .catch((error) => { return error.stderr; });
+
+    oldCoreVersion = oldCoreVersion.replace(/(\r\n|\n|\r)/gm, "");
 
     await exec.getExecOutput(`php wp-cli.phar core update --path=${wordPressPath}`)
       .then((output) => { return output.stdout; })
       .catch((error) => { return error.stderr; });
 
-    const newCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`)
+    let newCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`)
       .then((output) => { return output.stdout; })
       .catch((error) => { return error.stderr; });
 
+    newCoreVersion = newCoreVersion.replace(/(\r\n|\n|\r)/gm, "");
+
     if (oldCoreVersion != newCoreVersion) {
+      await fs.appendFile('update-report.md', os.EOL);
       await fs.appendFile('update-report.md', '## Core');
       await fs.appendFile('update-report.md', os.EOL);
       await fs.appendFile('update-report.md', os.EOL);
