@@ -135,26 +135,27 @@ async function run() {
     }
 
     // Core.
-    const coreUpdateCommand = await exec.getExecOutput(`php wp-cli.phar core update --path=${wordPressPath}`)
+    const oldCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`);
+
+    await exec.getExecOutput(`php wp-cli.phar core update --path=${wordPressPath}`)
       .then((output) => { return output.stdout; })
       .catch((error) => { return error.stderr; });
 
-    // if (coreUpdateCommandOutput.status === 'Updated') {
-    //   const version = coreUpdateCommandOutput.old_version;
-    //   const updatedVersion = coreUpdateCommandOutput.new_version;
+    const newCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`);
 
-    //   await fs.appendFile('update-report.md', '## Core');
-    //   await fs.appendFile('update-report.md', os.EOL);
-    //   await fs.appendFile('update-report.md', os.EOL);
-    //   await fs.appendFile('update-report.md', `- Updated Core from ${version} to ${updatedVersion}.`);
-    //   await fs.appendFile('update-report.md', os.EOL);
+    if (oldCoreVersion != newCoreVersion) {
+      await fs.appendFile('update-report.md', '## Core');
+      await fs.appendFile('update-report.md', os.EOL);
+      await fs.appendFile('update-report.md', os.EOL);
+      await fs.appendFile('update-report.md', `- Updated Core from ${oldCoreVersion} to ${newCoreVersion}.`);
+      await fs.appendFile('update-report.md', os.EOL);
 
-    //   if (!withoutGit) {
-    //     // Add all changes to git.
-    //     await exec.exec(`git add ${wordPressPath}`);
-    //     await exec.exec(`git commit -m "Updated Core from ${version} to ${updatedVersion}."`);
-    //   }
-    // }
+      if (!withoutGit) {
+        // Add all changes to git.
+        await exec.exec(`git add ${wordPressPath}`);
+        await exec.exec(`git commit -m "Updated Core from ${oldCoreVersion} to ${newCoreVersion}."`);
+      }
+    }
   } catch (error) {
     core.setFailed(error.message);
   }
