@@ -18,8 +18,35 @@ jobs:
   # test action works running from the graph
   test:
     runs-on: ubuntu-latest
+    env:
+      DB_DATABASE: wordpress
+      DB_USER: root
+      DB_PASSWORD: root
+
+      WP_SITE_URL: wordpress-github-actions-testing.ddev.site
+      WP_SITE_TITLE: "Devops Site"
+      WP_ADMIN_USERNAME: admin
+      WP_ADMIN_EMAIL: admin@example.com
     steps:
     - uses: actions/checkout@v3
+    - name: Set up MySQL
+      run: |
+        sudo systemctl start mysql
+        sudo mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.0
+      env:
+        update: true
+        
+    - name: Install and Configure WordPress
+      run: |
+        php wp-cli.phar core download --force --version=6.1.1
+        php wp-cli.phar config create --force --dbname=${{ env.DB_DATABASE }} --dbuser=${{ env.DB_USER }} --dbpass=${{ env.DB_PASSWORD }}
+        php wp-cli.phar core install --url=${{ env.WP_SITE_URL}} --title="${{env.WP_SITE_TITLE}}" --admin_user=${{ env.WP_ADMIN_USERNAME }} --admin_email=${{ env.WP_ADMIN_EMAIL }}
+
     - uses: ./
       with:
-        milliseconds: 1000
+        wordPressPath: 'test/wordpress'
