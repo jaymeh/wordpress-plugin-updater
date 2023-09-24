@@ -6,7 +6,7 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 
 const fs = (__nccwpck_require__(147).promises);
 
-let findInFile = async function (file, string) {
+const findInFile = async function (file, string) {
     const fileContains = await fs.readFile(file)
         .then(function (data) {
             if (data.includes(string)) {
@@ -30,20 +30,30 @@ module.exports = { findInFile };
 
 const fs = (__nccwpck_require__(147).promises);
 const os = __nccwpck_require__(37);
+const exec = __nccwpck_require__(514);
 
-let addToIgnore = async function (file, comment = null) {
+let addToIgnore = async function (fileToIgnore, comment = null) {
     if (comment) {
         await fs.appendFile('.gitignore', os.EOL);
         await fs.appendFile('.gitignore', comment);
     }
     await fs.appendFile('.gitignore', os.EOL);
-    await fs.appendFile('.gitignore', file);
+    await fs.appendFile('.gitignore', fileToIgnore);
     await fs.appendFile('.gitignore', os.EOL);
 
     return true;
 };
 
-module.exports = { addToIgnore };
+let isDirty = async function (path = './') {
+    /*eslint no-unused-vars: ["error", { "args": "none" }]*/
+    const isDirty = await exec.exec('git', ['diff', '--exit-code', path])
+        .then((output) => { return false; })
+        .catch((error) => { return true; });
+
+    return isDirty;
+}
+
+module.exports = { addToIgnore, isDirty };
 
 /***/ }),
 
@@ -604,7 +614,7 @@ class OidcClient {
                 .catch(error => {
                 throw new Error(`Failed to get ID Token. \n 
         Error Code : ${error.statusCode}\n 
-        Error Message: ${error.result.message}`);
+        Error Message: ${error.message}`);
             });
             const id_token = (_a = res.result) === null || _a === void 0 ? void 0 : _a.value;
             if (!id_token) {
@@ -1992,6 +2002,19 @@ class HttpClientResponse {
             }));
         });
     }
+    readBodyBuffer() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+                const chunks = [];
+                this.message.on('data', (chunk) => {
+                    chunks.push(chunk);
+                });
+                this.message.on('end', () => {
+                    resolve(Buffer.concat(chunks));
+                });
+            }));
+        });
+    }
 }
 exports.HttpClientResponse = HttpClientResponse;
 function isHttps(requestUrl) {
@@ -2496,7 +2519,13 @@ function getProxyUrl(reqUrl) {
         }
     })();
     if (proxyVar) {
-        return new URL(proxyVar);
+        try {
+            return new URL(proxyVar);
+        }
+        catch (_a) {
+            if (!proxyVar.startsWith('http://') && !proxyVar.startsWith('https://'))
+                return new URL(`http://${proxyVar}`);
+        }
     }
     else {
         return undefined;
@@ -2506,6 +2535,10 @@ exports.getProxyUrl = getProxyUrl;
 function checkBypass(reqUrl) {
     if (!reqUrl.hostname) {
         return false;
+    }
+    const reqHost = reqUrl.hostname;
+    if (isLoopbackAddress(reqHost)) {
+        return true;
     }
     const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
     if (!noProxy) {
@@ -2532,13 +2565,24 @@ function checkBypass(reqUrl) {
         .split(',')
         .map(x => x.trim().toUpperCase())
         .filter(x => x)) {
-        if (upperReqHosts.some(x => x === upperNoProxyItem)) {
+        if (upperNoProxyItem === '*' ||
+            upperReqHosts.some(x => x === upperNoProxyItem ||
+                x.endsWith(`.${upperNoProxyItem}`) ||
+                (upperNoProxyItem.startsWith('.') &&
+                    x.endsWith(`${upperNoProxyItem}`)))) {
             return true;
         }
     }
     return false;
 }
 exports.checkBypass = checkBypass;
+function isLoopbackAddress(host) {
+    const hostLower = host.toLowerCase();
+    return (hostLower === 'localhost' ||
+        hostLower.startsWith('127.') ||
+        hostLower.startsWith('[::1]') ||
+        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
+}
 //# sourceMappingURL=proxy.js.map
 
 /***/ }),
@@ -3965,6 +4009,151 @@ exports["default"] = _default;
 
 /***/ }),
 
+/***/ 853:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const exec = __nccwpck_require__(514);
+const core = __nccwpck_require__(186);
+const fs = (__nccwpck_require__(147).promises);
+const os = __nccwpck_require__(37);
+const git = __nccwpck_require__(913);
+
+let updateExtensions = async function (totalRows, command, type, directory, withoutGit) {
+    core.debug(`Found ${totalRows} ${type}(s).`);
+    const commandOutput = JSON.parse(command);
+    for (let i = 0; i <= totalRows - 1; i++) {
+        const version = commandOutput[i].old_version;
+        const updatedVersion = commandOutput[i].new_version;
+        const name = commandOutput[i].name;
+        const status = commandOutput[i].status;
+        const pluginPath = `${directory}/${name}`;
+
+        core.debug(`Plugin Path is: ${pluginPath}/*`);
+
+        if (status === 'Updated') {
+            core.info(`Updating plugin: ${name} at ${pluginPath}`);
+            await exec.exec('echo', [`"${pluginPath}/*"`]);
+
+            var updateMessage = `Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}.`;
+            let failed = false;
+
+            let isDirty = await git.isDirty(pluginPath);
+            if (!withoutGit && isDirty) {
+                // TODO: Test we can actually add first.
+                // Run a git diff on the folder, see if we get output.
+                try {
+                    // await exec.exec('git', ['add', `${pluginPath}/*`, '--dry-run']);
+
+                    await exec.exec('git', ['add', `${pluginPath}/*`]);
+                    await exec.exec('git', ['commit', '-m', updateMessage]);
+                } catch (error) {
+                    core.info(error.stderr);
+                    failed = true;
+                }
+            }
+
+            if (!failed) {
+                // TODO: Think about adding a status here to say if it failed.
+                await fs.appendFile('update-report.md', `- ${updateMessage}`);
+                await fs.appendFile('update-report.md', os.EOL);
+            }
+        }
+    }
+};
+
+let updateACFPro = async function (withoutGit, acfProKey, pluginDirectory, wordPressPath) {
+    // TODO: See if we can find a way to get the version of ACF Pro.
+    await exec.exec('php', ['wp-cli.phar', 'plugin', 'install', `https://connect.advancedcustomfields.com/v2/plugins/download?p=pro&k=${acfProKey}`, `--path=${wordPressPath}`, '--force']);
+
+    if (!withoutGit) {
+        // Add all changes to git.
+        await exec.exec('git', ['add', pluginDirectory]);
+        await exec.exec(`git commit -m "Updated ACF Pro."`);
+    }
+
+    await fs.appendFile('update-report.md', '- Updated ACF Pro.');
+    await fs.appendFile('update-report.md', os.EOL);
+};
+
+let updateCore = async function (wordPressPath, withoutGit) {
+    let oldCoreVersion = await exec.getExecOutput('php', ['wp-cli.phar', 'core', 'version', '--allow-root', `--path=${wordPressPath}`])
+        .then((output) => { return output.stdout; })
+        .catch((error) => { return error.stderr; });
+
+    oldCoreVersion = oldCoreVersion.replace(/(\r\n|\n|\r)/gm, "");
+
+    await exec.getExecOutput('php', ['wp-cli.phar', 'core', 'update', `--path=${wordPressPath}`])
+        .then((output) => { return output.stdout; })
+        .catch((error) => { return error.stderr; });
+
+    let newCoreVersion = await exec.getExecOutput('php', ['wp-cli.phar', 'core', 'version', '--allow-root', `--path=${wordPressPath}`])
+        .then((output) => { return output.stdout; })
+        .catch((error) => { return error.stderr; });
+
+    newCoreVersion = newCoreVersion.replace(/(\r\n|\n|\r)/gm, "");
+
+    if (oldCoreVersion != newCoreVersion) {
+        await fs.appendFile('update-report.md', os.EOL);
+        await fs.appendFile('update-report.md', '## Core');
+        await fs.appendFile('update-report.md', os.EOL);
+        await fs.appendFile('update-report.md', os.EOL);
+        await fs.appendFile('update-report.md', `- Updated Core from ${oldCoreVersion} to ${newCoreVersion}.`);
+        await fs.appendFile('update-report.md', os.EOL);
+
+        if (!withoutGit) {
+            // Add all changes to git.
+            await exec.exec('git', ['add', wordPressPath]);
+            await exec.exec('git', ['commit', '-m', `"Updated Core from ${oldCoreVersion} to ${newCoreVersion}."`]);
+        }
+    }
+};
+
+let updateLanguages = async function (wordPressPath, withoutGit) {
+    // TODO: Function could do with a little bit of cleanup.
+    // TODO: Add a check to see if the language files are already up to date before parsing this.
+    await fs.appendFile('update-report.md', os.EOL);
+    await fs.appendFile('update-report.md', '## Languages');
+    await fs.appendFile('update-report.md', os.EOL);
+
+    const languages = [
+        'core',
+        'plugin',
+        'theme',
+    ];
+
+    for (let i = 0; i <= languages.length - 1; i++) {
+        var args = [
+            'wp-cli.phar',
+            'language',
+            languages[i],
+            'update',
+        ];
+
+        if (languages[i] != 'core') {
+            args.push('--all');
+        }
+
+        args.push(`--path=${wordPressPath}`);
+
+        await exec.getExecOutput('php', args);
+        const isDirty = await git.isDirty();
+        if (!withoutGit && isDirty) {
+            // Add all changes to git.
+            await exec.exec('git', ['add', wordPressPath]);
+            await exec.exec('git', ['commit', '-m', `"Updated ${languages[i]} language files."`]);
+        }
+
+        if (isDirty) {
+            await fs.appendFile('update-report.md', `- Updated ${languages[i]} language files.`);
+            await fs.appendFile('update-report.md', os.EOL);
+        }
+    }
+}
+
+module.exports = { updateExtensions, updateACFPro, updateCore, updateLanguages };
+
+/***/ }),
+
 /***/ 491:
 /***/ ((module) => {
 
@@ -4120,22 +4309,73 @@ var __webpack_exports__ = {};
 (() => {
 const core = __nccwpck_require__(186);
 const exec = __nccwpck_require__(514);
+const os = __nccwpck_require__(37);
+const fs = (__nccwpck_require__(147).promises);
+// const io = require('@actions/io');
 
 const { findInFile } = __nccwpck_require__(631);
-const { addToIgnore } = __nccwpck_require__(913);
+const { addToIgnore, isDirty } = __nccwpck_require__(913);
+const { updateExtensions, updateACFPro, updateCore, updateLanguages } = __nccwpck_require__(853);
 
 // most @actions toolkit packages have async methods
 async function run() {
   try {
+    // TODO: Wrap path handling in another function.
+    let wordPressPath = core.getInput('wordPressPath', {});
+    if (!wordPressPath) {
+      wordPressPath = __dirname;
+    }
+    core.debug(`Wordpress Path: ${wordPressPath}`);
+    let wordPressPathTrailingSlash = wordPressPath;
+    if (wordPressPath != false) {
+      // Add trailing slash if not present.
+      if (!wordPressPath.endsWith('/')) {
+        core.debug('Wordpress Path does not end with a slash, adding one now.');
+        wordPressPathTrailingSlash = `${wordPressPath}/`;
+      }
+    }
+
     // Create update file.
     const file = 'update-report.md';
     exec.exec('touch', file);
+
+    const pluginDirectory = wordPressPathTrailingSlash + core.getInput('pluginDirectory', {});
+    const themeDirectory = wordPressPathTrailingSlash + core.getInput('themeDirectory', {});
+    const databaseName = core.getInput('databaseName', {});
+    const databaseUsername = core.getInput('databaseUsername', {});
+    const databasePassword = core.getInput('databasePassword', {});
+
+    // If we should update ACF Pro.
+    const updateAcfPro = core.getBooleanInput('updateAcfPro', {});
+    const acfProKey = core.getInput('acfProKey', {});
+    const committerEmail = core.getInput('committerEmail', {});
+    const committerName = core.getInput('committerName', {});
+
+    // WP Path.
+    let withoutGit = core.getBooleanInput('ignoreGitChanges', {});
+    if (withoutGit) {
+      core.info('Ignoring git changes.');
+    }
+
+    // Set the committer email and name.
+    if (!withoutGit) {
+      // Setup Committer details.
+      await exec.exec('git', ['config', '--global', 'user.email', committerEmail]);
+      await exec.exec('git', ['config', '--global', 'user.name', committerName]);
+    }
 
     // Checks for update-report.md in .gitignore.
     const updateReportFound = await findInFile('.gitignore', 'update-report.md');
     if (!updateReportFound) {
       core.debug('update-report.md not found in .gitignore, adding it now.');
       await addToIgnore('update-report.md', '# Ignore Updates Versions file.');
+    }
+
+    // Commit Changes if there are any.
+    let hasGitChanges = await isDirty(wordPressPath);
+    if (!withoutGit && hasGitChanges) {
+      await exec.exec('git', ['add', '.gitignore']);
+      await exec.exec('git', ['commit', '-m', 'Prevent version output from being added to repository.']);
     }
 
     // Checks for update-report.md in .gitignore.
@@ -4145,7 +4385,74 @@ async function run() {
       await addToIgnore('wp-cli.phar', '# Prevent wp-cli.phar script from being added to repository.');
     }
 
-    // Commits.
+    // Commit Changes.
+    if (!withoutGit && !wpCliIgnoreFound) {
+      await exec.exec('git', ['add', '.gitignore']);
+      await exec.exec('git', ['commit', '-m', 'Prevent wp-cli.phar script from being added to repository.']);
+    }
+
+    // Download WP-CLI.
+    await exec.exec('curl', ['-O', 'https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar']);
+
+    // TODO: Some projects may already have a wp-config.php file as part of the repo.
+    // if it exists, we keep a note of it in a variable, force overwrite and remember to discard any changes we make in a later step.
+
+    // TODO: Also check what happens if the path is empty or set to "./".
+    await exec.exec('php', ['wp-cli.phar', 'config', 'create', `--path=${wordPressPath}`, `--dbname=${databaseName}`, `--dbuser=${databaseUsername}`, `--dbpass=${databasePassword}`]);
+    await exec.exec('php', ['wp-cli.phar', 'core', 'install', `--path=${wordPressPath}`, '--url="site.local"', '--title="CI Test Site"', '--admin_user=admin', '--admin_email=admin@example.com']);
+
+    // Update Plugins.
+    const pluginUpdateCommand = await exec.getExecOutput('php', ['wp-cli.phar', 'plugin', 'update', `--path=${wordPressPath}`, '--all', '--format=json'])
+      .then((output) => { return output.stdout; })
+      .catch((error) => { return error.stderr; });
+    const totalPluginsToUpdate = JSON.parse(pluginUpdateCommand).length;
+
+    if (totalPluginsToUpdate > 0) {
+      await fs.appendFile('update-report.md', '## Plugins');
+      await fs.appendFile('update-report.md', os.EOL);
+      await fs.appendFile('update-report.md', os.EOL);
+
+      await updateExtensions(totalPluginsToUpdate, pluginUpdateCommand, 'plugin', pluginDirectory, withoutGit);
+    }
+
+    if (updateAcfPro) {
+      await updateACFPro(withoutGit, acfProKey, pluginDirectory, wordPressPath);
+    }
+
+    // Update Themes.
+    const updateCommand = await exec.getExecOutput('php', ['wp-cli.phar', 'theme', 'update', `--path=${wordPressPath}`, '--all', '--format=json'])
+      .then((output) => { return output.stdout; })
+      .catch((error) => { return error.stderr; });
+    let totalThemesToUpdate = JSON.parse(updateCommand).length;
+
+    if (totalThemesToUpdate > 0) {
+      // TODO: Add a check to see if the language files are already up to date before putting this in.
+      await fs.appendFile('update-report.md', os.EOL);
+      await fs.appendFile('update-report.md', '## Themes');
+      await fs.appendFile('update-report.md', os.EOL);
+      await fs.appendFile('update-report.md', os.EOL);
+
+      await updateExtensions(totalThemesToUpdate, updateCommand, 'theme', themeDirectory, withoutGit);
+    }
+
+    // Core.
+    await updateCore(wordPressPath, withoutGit);
+
+    // Update Languages/Translations.
+    await updateLanguages(wordPressPath, withoutGit);
+
+    // Output the update report from the action.
+    const updateReport = await fs.readFile('update-report.md', 'utf8');
+    core.setOutput('updateReport', updateReport);
+
+    // TODO: Output a branch name variable based on this bash:
+    /*
+      full_date=$(date +"%d-%m-%Y")
+      branch_date=$(date +"%d-%b-%y")
+      branch_name=maintenance/${branch_date,,}
+      echo branch_name=$branch_name >> $GITHUB_OUTPUT
+      echo date=$full_date >> $GITHUB_OUTPUT
+    */
   } catch (error) {
     core.setFailed(error.message);
   }

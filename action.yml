@@ -1,10 +1,53 @@
 name: 'WordPress Maintenence Upgrade'
 description: 'Github action with tools to help with WordPress upgrades.'
 inputs:
-  
+  ignoreGitChanges:
+    description: 'Ignore git changes'
+    required: false
+    default: false
+  pluginDirectory:
+    description: 'Relative path to plugins'
+    required: false
+    default: 'wp-content/plugins'
+  themeDirectory:
+    description: 'Relative path to themes'
+    required: false
+    default: 'wp-content/themes'
+  databaseName:
+    description: 'Database name'
+    required: false
+    default: 'wordpress'
+  databaseUsername:
+    description: 'Database username'
+    required: false
+    default: 'root'
+  databasePassword:
+    description: 'Database password'
+    required: false
+    default: 'root'
+  wordPressPath:
+    description: 'Relative path to directory where WordPress is installed'
+    required: false
+    default: './'
+  updateAcfPro:
+    description: 'Whether to try and update ACF Pro'
+    required: false
+    default: false
+  acfProKey:
+    description: 'Whether to try and update ACF Pro'
+    required: false
+    default: false
+  committerName:
+    description: 'Name of the committer'
+    required: false
+    default: 'GitHub Actions'
+  committerEmail:
+    description: 'Email of the committer'
+    required: false
+    default: 'github-actions@github.com'
 outputs:
-  time: # output will be available to future steps
-    description: 'The current time after waiting'
+  updateReport:
+    description: 'A report of everything that was updated.'
 runs:
   using: 'node16'
   main: 'dist/index.js'

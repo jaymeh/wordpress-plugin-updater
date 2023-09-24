@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 
-let findInFile = async function (file, string) {
+const findInFile = async function (file, string) {
     const fileContains = await fs.readFile(file)
         .then(function (data) {
             if (data.includes(string)) {

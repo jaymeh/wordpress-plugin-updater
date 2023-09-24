@@ -1,16 +1,26 @@
 const fs = require('fs').promises;
 const os = require("os");
+const exec = require('@actions/exec');
 
-let addToIgnore = async function (file, comment = null) {
+let addToIgnore = async function (fileToIgnore, comment = null) {
     if (comment) {
         await fs.appendFile('.gitignore', os.EOL);
         await fs.appendFile('.gitignore', comment);
     }
     await fs.appendFile('.gitignore', os.EOL);
-    await fs.appendFile('.gitignore', file);
+    await fs.appendFile('.gitignore', fileToIgnore);
     await fs.appendFile('.gitignore', os.EOL);
 
     return true;
 };
 
-module.exports = { addToIgnore };
+let isDirty = async function (path = './') {
+    /*eslint no-unused-vars: ["error", { "args": "none" }]*/
+    const isDirty = await exec.exec('git', ['diff', '--exit-code', path])
+        .then((output) => { return false; })
+        .catch((error) => { return true; });
+
+    return isDirty;
+}
+
+module.exports = { addToIgnore, isDirty };
