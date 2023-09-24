@@ -46,7 +46,7 @@ let addToIgnore = async function (fileToIgnore, comment = null) {
 
 let isDirty = async function (path = './') {
     /*eslint no-unused-vars: ["error", { "args": "none" }]*/
-    const isDirty = await exec.exec('git', ['diff', path, '--exit-code'])
+    const isDirty = await exec.exec('git', ['diff', '--exit-code', path])
         .then((output) => { return false; })
         .catch((error) => { return true; });
 
@@ -4372,7 +4372,7 @@ async function run() {
     }
 
     // Commit Changes if there are any.
-    let hasGitChanges = await isDirty();
+    let hasGitChanges = await isDirty(wordPressPath);
     if (!withoutGit && hasGitChanges) {
       await exec.exec('git', ['add', '.gitignore']);
       await exec.exec('git', ['commit', '-m', 'Prevent version output from being added to repository.']);

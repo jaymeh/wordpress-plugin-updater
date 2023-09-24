@@ -63,7 +63,7 @@ async function run() {
     }
 
     // Commit Changes if there are any.
-    let hasGitChanges = await isDirty();
+    let hasGitChanges = await isDirty(wordPressPath);
     if (!withoutGit && hasGitChanges) {
       await exec.exec('git', ['add', '.gitignore']);
       await exec.exec('git', ['commit', '-m', 'Prevent version output from being added to repository.']);
