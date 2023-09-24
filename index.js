@@ -5,7 +5,7 @@ const fs = require('fs').promises;
 // const io = require('@actions/io');
 
 const { findInFile } = require('./filesystem');
-const { addToIgnore } = require('./git');
+const { addToIgnore, isDirty } = require('./git');
 const { updateExtensions, updateACFPro, updateCore, updateLanguages } = require('./updates');
 
 // most @actions toolkit packages have async methods
@@ -62,8 +62,9 @@ async function run() {
       await addToIgnore('update-report.md', '# Ignore Updates Versions file.');
     }
 
-    // Commit Changes.
-    if (!withoutGit) {
+    // Commit Changes if there are any.
+    let hasGitChanges = await isDirty();
+    if (!withoutGit && hasGitChanges) {
       await exec.exec('git', ['add', '.gitignore']);
       await exec.exec('git', ['commit', '-m', 'Prevent version output from being added to repository.']);
     }

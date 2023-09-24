@@ -4314,7 +4314,7 @@ const fs = (__nccwpck_require__(147).promises);
 // const io = require('@actions/io');
 
 const { findInFile } = __nccwpck_require__(631);
-const { addToIgnore } = __nccwpck_require__(913);
+const { addToIgnore, isDirty } = __nccwpck_require__(913);
 const { updateExtensions, updateACFPro, updateCore, updateLanguages } = __nccwpck_require__(853);
 
 // most @actions toolkit packages have async methods
@@ -4371,8 +4371,9 @@ async function run() {
       await addToIgnore('update-report.md', '# Ignore Updates Versions file.');
     }
 
-    // Commit Changes.
-    if (!withoutGit) {
+    // Commit Changes if there are any.
+    let hasGitChanges = await isDirty();
+    if (!withoutGit && hasGitChanges) {
       await exec.exec('git', ['add', '.gitignore']);
       await exec.exec('git', ['commit', '-m', 'Prevent version output from being added to repository.']);
     }
