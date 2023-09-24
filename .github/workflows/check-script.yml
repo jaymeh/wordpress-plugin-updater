@@ -70,3 +70,4 @@ jobs:
           wordPressPath: test/wordpress
           acfProKey: ${{ secrets.ACF_PRO_KEY }}
           updateAcfPro: true
+          ignoreGitChanges: true
