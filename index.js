@@ -92,7 +92,7 @@ async function run() {
     await exec.exec('php', ['wp-cli.phar', 'core', 'install', `--path=${wordPressPath}`, '--url="site.local"', '--title="CI Test Site"', '--admin_user=admin', '--admin_email=admin@example.com']);
 
     // Update Plugins.
-    const pluginUpdateCommand = await exec.getExecOutput(`php wp-cli.phar plugin update --path=${wordPressPath} --all --format=json`)
+    const pluginUpdateCommand = await exec.getExecOutput('php', ['wp-cli.phar', 'plugin', 'update', `--path=${wordPressPath}`, '--all', '--format=json'])
       .then((output) => { return output.stdout; })
       .catch((error) => { return error.stderr; });
     const totalPluginsToUpdate = JSON.parse(pluginUpdateCommand).length;
@@ -110,7 +110,7 @@ async function run() {
     }
 
     // Update Themes.
-    const updateCommand = await exec.getExecOutput(`php wp-cli.phar theme update --path=${wordPressPath} --all --format=json`)
+    const updateCommand = await exec.getExecOutput('php', ['wp-cli.phar', 'theme', 'update', `--path=${wordPressPath}`, '--all', '--format=json'])
       .then((output) => { return output.stdout; })
       .catch((error) => { return error.stderr; });
     let totalThemesToUpdate = JSON.parse(updateCommand).length;

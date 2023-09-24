@@ -53,7 +53,7 @@ let updateACFPro = async function (withoutGit, acfProKey, pluginDirectory, wordP
 
     if (!withoutGit) {
         // Add all changes to git.
-        await exec.exec(`git add ${pluginDirectory}`);
+        await exec.exec('git', ['add', pluginDirectory]);
         await exec.exec(`git commit -m "Updated ACF Pro."`);
     }
 
@@ -62,17 +62,17 @@ let updateACFPro = async function (withoutGit, acfProKey, pluginDirectory, wordP
 };
 
 let updateCore = async function (wordPressPath, withoutGit) {
-    let oldCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`)
+    let oldCoreVersion = await exec.getExecOutput('php', ['wp-cli.phar', 'core', 'version', '--allow-root', `--path=${wordPressPath}`])
         .then((output) => { return output.stdout; })
         .catch((error) => { return error.stderr; });
 
     oldCoreVersion = oldCoreVersion.replace(/(\r\n|\n|\r)/gm, "");
 
-    await exec.getExecOutput(`php wp-cli.phar core update --path=${wordPressPath}`)
+    await exec.getExecOutput('php', ['wp-cli.phar', 'core', 'update', `--path=${wordPressPath}`])
         .then((output) => { return output.stdout; })
         .catch((error) => { return error.stderr; });
 
-    let newCoreVersion = await exec.getExecOutput(`php wp-cli.phar core version --allow-root --path=${wordPressPath}`)
+    let newCoreVersion = await exec.getExecOutput('php', ['wp-cli.phar', 'core', 'version', '--allow-root', `--path=${wordPressPath}`])
         .then((output) => { return output.stdout; })
         .catch((error) => { return error.stderr; });
 
@@ -88,8 +88,8 @@ let updateCore = async function (wordPressPath, withoutGit) {
 
         if (!withoutGit) {
             // Add all changes to git.
-            await exec.exec(`git add ${wordPressPath}`);
-            await exec.exec(`git commit -m "Updated Core from ${oldCoreVersion} to ${newCoreVersion}."`);
+            await exec.exec('git', ['add', wordPressPath]);
+            await exec.exec('git', ['commit', '-m', `"Updated Core from ${oldCoreVersion} to ${newCoreVersion}."`]);
         }
     }
 };
@@ -113,12 +113,12 @@ let updateLanguages = async function (wordPressPath, withoutGit) {
             all = '--all';
         }
 
-        await exec.getExecOutput(`php wp-cli.phar language ${languages[i]} update  ${all} --path=${wordPressPath}`);
+        await exec.getExecOutput('php', ['wp-cli.phar', 'language', languages[i], 'update', all, `--path=${wordPressPath}`]);
         const isDirty = await git.isDirty();
         if (!withoutGit && isDirty) {
             // Add all changes to git.
-            await exec.exec(`git add ${wordPressPath}`);
-            await exec.exec(`git commit -m "Updated ${languages[i]} language files."`);
+            await exec.exec('git', ['add', wordPressPath]);
+            await exec.exec('git', ['commit', '-m', `"Updated ${languages[i]} language files."`]);
         }
 
         if (isDirty) {
