@@ -4122,12 +4122,21 @@ let updateLanguages = async function (wordPressPath, withoutGit) {
     ];
 
     for (let i = 0; i <= languages.length - 1; i++) {
-        let all = '';
+        var args = [
+            'php',
+            'wp-cli.phar',
+            'language',
+            languages[i],
+            'update',
+        ];
+
         if (languages[i] != 'core') {
-            all = '--all';
+            args.push('--all');
         }
 
-        await exec.getExecOutput('php', ['wp-cli.phar', 'language', languages[i], 'update', all, `--path=${wordPressPath}`]);
+        args.push(`--path=${wordPressPath}`);
+
+        await exec.getExecOutput('php', args);
         const isDirty = await git.isDirty();
         if (!withoutGit && isDirty) {
             // Add all changes to git.
