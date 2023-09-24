@@ -109,7 +109,6 @@ let updateLanguages = async function (wordPressPath, withoutGit) {
 
     for (let i = 0; i <= languages.length - 1; i++) {
         var args = [
-            'php',
             'wp-cli.phar',
             'language',
             languages[i],
