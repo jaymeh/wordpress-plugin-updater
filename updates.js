@@ -22,10 +22,13 @@ let updateExtensions = async function (totalRows, command, type, directory, with
 
             var updateMessage = `Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}.`;
             let failed = false;
-            if (!withoutGit) {
+
+            let isDirty = await git.isDirty(pluginPath);
+            if (!withoutGit && isDirty) {
                 // TODO: Test we can actually add first.
+                // Run a git diff on the folder, see if we get output.
                 try {
-                    await exec.exec('git', ['add', `${pluginPath}/*`, '--dry-run']);
+                    // await exec.exec('git', ['add', `${pluginPath}/*`, '--dry-run']);
 
                     await exec.exec('git', ['add', `${pluginPath}/*`]);
                     await exec.exec('git', ['commit', '-m', updateMessage]);

@@ -50,10 +50,6 @@ async function run() {
 
     // Set the committer email and name.
     if (!withoutGit) {
-      // Ignore warnings about not committing ignored files.
-      await exec.exec('git', ['config', 'advice.addIgnoredFile', false]);
-      await exec.exec('git', ['config', 'add.ignoreErrors', true]);
-
       // Setup Committer details.
       await exec.exec('git', ['config', '--global', 'user.email', committerEmail]);
       await exec.exec('git', ['config', '--global', 'user.name', committerName]);

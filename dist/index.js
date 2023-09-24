@@ -44,9 +44,9 @@ let addToIgnore = async function (fileToIgnore, comment = null) {
     return true;
 };
 
-let isDirty = async function () {
+let isDirty = async function (path = './') {
     /*eslint no-unused-vars: ["error", { "args": "none" }]*/
-    const isDirty = await exec.exec('git', ['diff', '--exit-code'])
+    const isDirty = await exec.exec('git', ['diff', path, '--exit-code'])
         .then((output) => { return false; })
         .catch((error) => { return true; });
 
@@ -4036,10 +4036,13 @@ let updateExtensions = async function (totalRows, command, type, directory, with
 
             var updateMessage = `Updated ${type} ${name.charAt(0).toUpperCase() + name.slice(1)} from ${version} to ${updatedVersion}.`;
             let failed = false;
-            if (!withoutGit) {
+
+            let isDirty = await git.isDirty(pluginPath);
+            if (!withoutGit && isDirty) {
                 // TODO: Test we can actually add first.
+                // Run a git diff on the folder, see if we get output.
                 try {
-                    await exec.exec('git', ['add', `${pluginPath}/*`, '--dry-run']);
+                    // await exec.exec('git', ['add', `${pluginPath}/*`, '--dry-run']);
 
                     await exec.exec('git', ['add', `${pluginPath}/*`]);
                     await exec.exec('git', ['commit', '-m', updateMessage]);
@@ -4348,10 +4351,6 @@ async function run() {
 
     // Set the committer email and name.
     if (!withoutGit) {
-      // Ignore warnings about not committing ignored files.
-      await exec.exec('git', ['config', 'advice.addIgnoredFile', false]);
-      await exec.exec('git', ['config', 'add.ignoreErrors', true]);
-
       // Setup Committer details.
       await exec.exec('git', ['config', '--global', 'user.email', committerEmail]);
       await exec.exec('git', ['config', '--global', 'user.name', committerName]);
