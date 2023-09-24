@@ -77,7 +77,7 @@ async function run() {
     }
 
     // Commit Changes.
-    if (!withoutGit) {
+    if (!withoutGit && !wpCliIgnoreFound) {
       await exec.exec('git', ['add', '.gitignore']);
       await exec.exec('git', ['commit', '-m', 'Prevent wp-cli.phar script from being added to repository.']);
     }
