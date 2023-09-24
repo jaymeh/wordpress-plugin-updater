@@ -56,6 +56,9 @@ jobs:
         env:
           update: true
 
+      - name: Install WP CLI
+        run: curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+
       - name: Install and Configure WordPress
         run: |
           php wp-cli.phar core download --force --version=6.1.1
@@ -67,6 +70,13 @@ jobs:
           php wp-cli.phar plugin install bbpress --version=2.5.13
           php wp-cli.phar plugin install advanced-custom-fields --version=6.0.7
 
+      - name: Cleanup
+        run: |
+          rm wp-cli.phar
+          rm wp-config.php
+          sudo mysql -e 'DROP DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+          sudo mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+
       - name: Run the action.
         uses: ./
         with:
@@ -74,10 +84,3 @@ jobs:
           acfProKey: ${{ secrets.ACF_PRO_KEY }}
           updateAcfPro: true
           ignoreGitChanges: true
-
-      - name: Cleanup
-        run: |
-          rm wp-cli.phar
-          rm wp-config.php
-          sudo mysql -e 'DROP DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
-          sudo mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
